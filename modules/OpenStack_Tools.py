@@ -6,7 +6,7 @@ import sys
 import os_client_config
 
 #from Monitoring_Tools import DictTable, ListTable, highlights, ok_highlight, warn_highlight, error_highlight
-from Monitoring_Tools import DictTable, ListTable, highlights
+from Monitoring_Tools import DictTable, ListTable, highlights, display_html_ping_endpoint_urls
 from IPython.core.display import display,HTML
 
 
@@ -117,4 +117,31 @@ def showServerList(conn, showFlavors=False, showImages=False):
     display( HTML(html) )
     
     flushfile.restore_stderr()
+
+def display_html_endpoint_urls(conn, verbose=False):
+    from openstack import profile as _profile
+    from openstack import exceptions as _exceptions
+
+    prof = _profile.Profile()
+    services = [service.service_type for service in prof.get_services()]
+    #print(services)
+
+    #service_list=['compute', 'clustering', 'orchestration', 'database', 'network', 'volume', 'messaging', 'identity',
+    #              'metering', 'object-store', 'key-manager', 'image']
+    #service_list=['compute', 'orchestration', 'network', 'volume', 'identity', 'metering', 'object-store', 'image']
+    service_list=['compute', 'network', 'volume', 'identity', 'image']
+
+    endpoint_urls={}
+    for service in services:
+        if service in service_list:
+            #print("SERVICE:" + service)
+            try:
+                url=conn.authenticator.get_endpoint(conn.session, service_type=service, interface='public')
+                endpoint_urls[service]=url
+            #except _exceptions.EndpointNotFound:
+            #    pass
+            except Exception(e):
+                raise
+
+    display_html_ping_endpoint_urls(endpoint_urls, verbose=False)
 
