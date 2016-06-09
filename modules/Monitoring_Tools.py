@@ -4,18 +4,24 @@
        http://docs.ansible.com/ansible/intro_inventory.html
 '''
 
-import sys
+import sys, os
 
 from Ping3      import ping
 
 from IPython.core.display import display,HTML
 
-#from ShowTables import DictTable, ListTable, highlights, ok_highlight, warn_highlight, error_highlight
+#import datetime
+from time import gmtime, strftime
 
 def display_platform(platform_name):
-    display(HTML('<h1>Platform: ' + platform_name + '</h1>'))
+    #dtstring = str(datetime.datetime.now())
+    #dtstring = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    dtstring = strftime("%Y-%m-%d %H:%M:%S")
+    display(HTML('<h1>Platform: ' + platform_name + '</h1>' + \
+                 '<h4>Run at: ' + dtstring + '</h4>'))
 
 def read_inventory(hosts_file):
+    hosts_file = hosts_file.replace('~', os.getenv('HOME')).replace('$HOME', os.getenv('HOME'))
     fd = open(hosts_file, 'r')
     group=None
     
@@ -70,6 +76,72 @@ def read_inventory(hosts_file):
 
 
 
+def ping_cmd(host, verbose=False):
+    """
+    Returns True if host responds to a ping request
+    """
+    import os, platform
+
+    # Ping parameters as function of OS
+    ping_str = "-n 2" if  platform.system().lower()=="windows" else "-c 2"
+
+    # Ping
+    cmd="ping " + ping_str + " " + host
+    
+    from subprocess import Popen
+    import subprocess
+    subproc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    retval = subproc.wait()
+    stdout = subproc.stdout.read()
+    if verbose:
+        print(stdout)
+    
+    import re
+    m = re.search('Packets: Sent = ([0-9]+), Received = ([0-9]+), Lost = ([0-9]+)', str(stdout))
+    #print("GROUP(0)=<" + m.group(0) + ">")
+    if m:
+        sent=m.group(1)
+        rcvd=m.group(2)
+        lost=m.group(3)
+    else:
+        # Linux: 1 packets transmitted, 1 received, 0% packet loss, time 0ms\nrtt min/avg/max/mdev = 0.030/0.030/0.030/0.000 ms\n
+        m = re.search('([0-9]+) packets transmitted, ([0-9]+) received', str(stdout))
+        sent=int(m.group(1))
+        rcvd=int(m.group(2))
+        lost=sent-rcvd
+
+    if verbose:
+        print("Sent {}, Received {}, Lost {} packets".format(sent,rcvd,lost))
+
+    m = re.search('Minimum = ([0-9]+)ms, Maximum = ([0-9]*)ms, Average = ([0-9]*)ms', str(stdout))
+    #print("GROUP(0)=<" + m.group(0) + ">")
+    mmin=0
+    mmax=0
+    mavg=0
+    if m:
+        mmin=m.group(1)
+        mmax=m.group(2)
+        mavg=m.group(3)
+    else:
+        m = re.search('rtt min\/avg\/max\/mdev = ([0-9,\.]+)\/([0-9,\.]+)\/([0-9,\.]+)\/', str(stdout))
+        if m:
+            mmin=m.group(1)
+            mavg=m.group(2)
+            mmax=m.group(3)
+
+    if verbose:
+        print("Min {}, Max {}, Avg {} msec".format(mmin,mmax,mavg))
+        print("RETURNVAL=" + str(retval))
+        #print("RETURNCODE=" + str(subproc.returncode))
+    
+    if rcvd != 0:
+        return mavg
+    else:
+        return None
+    #return(retval, sent, rcvd, lost, mmin, mmax, mavg)
+
+
+
 def ping_all(inventory, verbose=False):
     for host in inventory['ping_check']:
         if not host in inventory['hosts']:
@@ -82,11 +154,15 @@ def ping_all(inventory, verbose=False):
         if 'ansible_ip' in host_entry:
             ip = host_entry['ansible_ip']
         sys.stdout.write("ping({}[{}]) ... ".format(host, ip))
-        result = ping(ip, verbose)
+        #result = ping(ip, verbose)
+        result = ping_cmd(ip, verbose)
         if result:
             print("{} msec".format(result))
         #print("ping({}[{}] => {})".format(host, result, ip))
         
+def display_html_ping_all(inventory, verbose=False):
+    display(HTML( html_ping_all(inventory, verbose) ))
+
 def html_ping_all(inventory, verbose=False):
     
     results=dict()
@@ -101,12 +177,14 @@ def html_ping_all(inventory, verbose=False):
             ip = host_entry['ansible_host']
         if 'ansible_ip' in host_entry:
             ip = host_entry['ansible_ip']
-        sys.stdout.write("ping({}[{}]) ... ".format(host, ip))
-        result = ping(ip, verbose)
+        host_info="{}[{}]".format(host, ip)
+        sys.stdout.write("ping({}) ... ".format(host_info))
+        #result = ping(ip, verbose)
+        result = ping_cmd(ip, verbose)
         if result:
-            results[ip]="OK: {} msec".format(result)
+            results[host_info]="OK: {} msec".format(result)
         else:
-            results[ip]="TIMEOUT"
+            results[host_info]="TIMEOUT"
              
     ping_highlights={
         'OK':      ok_highlight,
@@ -190,4 +268,72 @@ class ListTable(list):
         return ''.join(html)
 
 
+def display_html_ping_ports_all(inventory, group='ssh_check', ports=[22], verbose=False):
+     display(HTML( html_ping_ports_all(inventory, group, ports, verbose)))
+
+def html_ping_ports_all(inventory, group='ssh_check', ports=[22], verbose=False):
+
+    results=dict()
+
+    for host in inventory['ssh_check']:
+        if not host in inventory['hosts']:
+            print("Error: host <{}> not in hosts".format(host))
+            return None
+        host_entry = inventory['hosts'][host]
+        ip=host
+        if 'ansible_host' in host_entry:
+            ip = host_entry['ansible_host']
+        if 'ansible_ip' in host_entry:
+            ip = host_entry['ansible_ip']
+        #result = ping(ip, verbose)
+        for port in ports:
+            ip_port=ip+":"+str(port)
+            host_port_info="{}[{}]".format(host, ip_port)
+            sys.stdout.write("ping({}) ... ".format(host_port_info))
+            result = ping_port(ip, port, verbose, timeout=2)
+            if result == 0:
+                results[host_port_info]="OK"
+            else:
+                results[host_port_info]="TIMEOUT"
+
+    ping_highlights={
+        'OK':      ok_highlight,
+        'TIMEOUT': error_highlight,
+    }
+    return DictTable._repr_html_(results, ping_highlights)
+
+
+def display_html(html):
+    display(HTML( html ))
+
+def display_html_ping_endpoint_urls(endpoint_urls, verbose=False):
+    display(HTML( html_ping_endpoint_urls(endpoint_urls, verbose)))
+
+def html_ping_endpoint_urls(endpoint_urls, verbose=False):
+
+    results=dict()
+
+    for service in endpoint_urls:
+        ip_port = endpoint_urls[service].split('/')[2]
+        (ip, port) = ip_port.split(':')
+        service_info="{} [{}]".format(ip_port, service)
+        
+        if verbose:
+            #print("SERVICE={} HOST={} PORT={}".format(service, ip, port))
+            sys.stdout.write("ping_port({}) ... ".format(service_info))
+            
+        result = ping_port(ip, int(port), verbose, timeout=2)
+        if result == 0:
+            results[service_info]="OK"
+        else:
+            results[service_info]="TIMEOUT"
+            
+        if verbose:
+            print(results[service_info])
+            
+    ping_highlights={
+        'OK':      ok_highlight,
+        'TIMEOUT': error_highlight,
+    }
+    return DictTable._repr_html_(results, ping_highlights)
 
