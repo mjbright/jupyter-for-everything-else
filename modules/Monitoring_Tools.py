@@ -337,3 +337,18 @@ def html_ping_endpoint_urls(endpoint_urls, verbose=False):
     }
     return DictTable._repr_html_(results, ping_highlights)
 
+def show_notebook_url(platform, host_ip, port=8888):
+    url = get_notebook_url(platform, host_ip, port)
+    html='<h4>The latest version of this status is available at <a href="' + url + '">' + url + '</a></h4>'
+    display(HTML( html ))
+
+def get_notebook_url(platform, host_ip, port=8888):
+    # import jupyter_client
+    # import json
+    # connection_info_file=jupyter_client.find_connection_file()
+    # connection_info_json=json.load(open(connection_info_file,'r'))
+    #print(str(connection_info_json))
+
+    url="http://{}:{}/tree/notebooks/cron/OpenStack_Monitoring_{}.html".format(host_ip, port, platform)
+    return url
+
