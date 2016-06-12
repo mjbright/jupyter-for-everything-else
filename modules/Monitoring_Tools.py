@@ -8,7 +8,7 @@ import sys, os
 
 from Ping3      import ping
 
-from IPython.core.display import display,HTML
+from IPython.core.display import display,HTML,Javascript
 
 #import datetime
 from time import gmtime, strftime
@@ -337,7 +337,7 @@ def html_ping_endpoint_urls(endpoint_urls, verbose=False):
     }
     return DictTable._repr_html_(results, ping_highlights)
 
-def show_notebook_url():
+def show_notebook_url0():
     display(HTML('''
 <p id="demo"></p>
  
@@ -346,6 +346,12 @@ ahref='<h4>The latest version of this status is available at <a href="' + window
 //document.getElementById("demo").innerHTML = window.location;
 document.getElementById("demo").innerHTML = ahref;
 </script>
+'''))
+
+def show_notebook_url():
+    display(Javascript('''
+var ahref='<h4>OK The latest version of this status is available at <a href="' + window.location + '">' + window.location + '</a><h4>';
+document.write(ahref)
 '''))
 
 """
