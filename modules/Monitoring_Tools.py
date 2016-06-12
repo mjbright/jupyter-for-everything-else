@@ -337,6 +337,18 @@ def html_ping_endpoint_urls(endpoint_urls, verbose=False):
     }
     return DictTable._repr_html_(results, ping_highlights)
 
+def show_notebook_url():
+    display(HTML('''
+<p id="demo"></p>
+ 
+<script>
+ahref='<h4>The latest version of this status is available at <a href="' + window.location + '">' + window.location + '</a><h4>'
+//document.getElementById("demo").innerHTML = window.location;
+document.getElementById("demo").innerHTML = ahref;
+</script>
+'''))
+
+"""
 def show_notebook_url(platform, host_ip, port=8888):
     url = get_notebook_url(platform, host_ip, port)
     html='<h4>The latest version of this status is available at <a href="' + url + '">' + url + '</a></h4>'
@@ -351,4 +363,5 @@ def get_notebook_url(platform, host_ip, port=8888):
 
     url="http://{}:{}/tree/notebooks/cron/OpenStack_Monitoring_{}.html".format(host_ip, port, platform)
     return url
+"""
 
