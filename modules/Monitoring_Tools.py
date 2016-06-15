@@ -8,7 +8,7 @@ import sys, os
 
 from Ping3      import ping
 
-from IPython.core.display import display,HTML
+from IPython.core.display import display,HTML,Javascript
 
 #import datetime
 from time import gmtime, strftime
@@ -337,18 +337,22 @@ def html_ping_endpoint_urls(endpoint_urls, verbose=False):
     }
     return DictTable._repr_html_(results, ping_highlights)
 
+"""
+Doesn't work in html copy of notebook, as e-mail client won't run the javascript:
+
 def show_notebook_url():
     display(HTML('''
-<p id="demo"></p>
+<div id="notebookurl">NOTEBOOK_URL</div>
  
 <script>
 ahref='<h4>The latest version of this status is available at <a href="' + window.location + '">' + window.location + '</a><h4>'
-//document.getElementById("demo").innerHTML = window.location;
-document.getElementById("demo").innerHTML = ahref;
+//document.getElementById("notebookurl").innerHTML = window.location;
+document.getElementById("notebookurl").innerHTML = ahref;
 </script>
 '''))
 
 """
+
 def show_notebook_url(platform, host_ip, port=8888):
     url = get_notebook_url(platform, host_ip, port)
     html='<h4>The latest version of this status is available at <a href="' + url + '">' + url + '</a></h4>'
@@ -362,6 +366,7 @@ def get_notebook_url(platform, host_ip, port=8888):
     #print(str(connection_info_json))
 
     url="http://{}:{}/tree/notebooks/cron/OpenStack_Monitoring_{}.html".format(host_ip, port, platform)
+    #url="http://{}:{}/notebooks/notebooks/cron/OpenStack_Monitoring_{}.ipynb".format(host_ip, port, platform)
+     #http://10.3.216.210:8888/notebooks/notebooks/cron/OpenStack_Monitoring_Py3.ipynb
     return url
-"""
 
