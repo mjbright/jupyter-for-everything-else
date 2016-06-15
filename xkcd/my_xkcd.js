@@ -1,18 +1,25 @@
-function xkcdplot() {
+function xkcdplot(args) {
 
     // Default parameters.
     var width = 600,
         height = 300,
+        xlabel = 'X-axis',
+        ylabel = 'Y-axis',
+        title = 'Graph',
         margin = 20,
         arrowSize = 12,
         arrowAspect = 0.4,
         arrowOffset = 6,
         magnitude = 0.003,
-        xlabel = "Time of Day",
-        ylabel = "Awesomeness",
-        title = "The most important graph ever made",
         xlim,
         ylim;
+
+    // Get arguments from 'args' parameter, if present
+    if (typeof(args['xlabel'])!=='undefined') xlabel = args['xlabel']
+    if (typeof(args['ylabel'])!=='undefined') ylabel = args['ylabel']
+    if (typeof(args['title'])!=='undefined')  title = args['title']
+    if (typeof(args['width'])!=='undefined')  width = args['width']
+    if (typeof(args['height'])!=='undefined')  height = args['height']
 
     // Plot elements.
     var el,
