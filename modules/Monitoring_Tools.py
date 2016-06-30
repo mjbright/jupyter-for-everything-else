@@ -143,7 +143,8 @@ def ping_cmd(host, verbose=False):
 
 
 def ping_all(inventory, verbose=False):
-    for host in inventory['ping_check']:
+
+    for host in sorted(inventory['ping_check']):
         if not host in inventory['hosts']:
             print("Error: host <{}> not in hosts".format(host))
             return None
@@ -167,7 +168,7 @@ def html_ping_all(inventory, verbose=False):
     
     results=dict()
     
-    for host in inventory['ping_check']:
+    for host in sorted(inventory['ping_check']):
         if not host in inventory['hosts']:
             print("Error: host <{}> not in hosts".format(host))
             return None
@@ -236,7 +237,10 @@ class DictTable(dict):
     # and renders an HTML Table in IPython Notebook.
     def _repr_html_(self, highlights=None):
         html = [ '''<table style="border: 1px solid black; border-style: collapse;" border="1" width=100%>"''' ]
-        for key, value in self.items():
+        #for key, value in self.items():
+        for key in sorted(self):
+            value = self[key]
+
             html.append("<tr>")
             html.append("<td>{0}</td>".format(key))
             if highlights:
@@ -275,7 +279,7 @@ def html_ping_ports_all(inventory, group='ssh_check', ports=[22], verbose=False)
 
     results=dict()
 
-    for host in inventory['ssh_check']:
+    for host in sorted(inventory['ssh_check']):
         if not host in inventory['hosts']:
             print("Error: host <{}> not in hosts".format(host))
             return None
