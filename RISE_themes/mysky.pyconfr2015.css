@@ -19,7 +19,6 @@
  * GLOBAL STYLES
  *********************************************/
 body {
-  font-size: 8px; /* why ignored?? */
   color: #005500;
   background: #77dd77;
   background: -moz-radial-gradient(center, circle cover, #f7fbfc 0%, #add9e4 100%);
@@ -32,7 +31,7 @@ body {
 
 .reveal {
   font-family: "Open Sans", sans-serif;
-  font-size: 24px;
+  font-size: 36px;
   font-weight: normal;
   letter-spacing: -0.02em;
   /*color: #333333;*/
@@ -66,10 +65,9 @@ body {
   color: #005500;
   /*color: #333333;*/
   font-family: "Quicksand", sans-serif;
-  font-size: 6px;
   line-height: 0.6em;
   letter-spacing: -0.05em;
-  /*text-transform: uppercase; - this works !*/
+  text-transform: none;
   text-shadow: none; }
 
 /*.reveal h1 { font-size: 2.00em; }
