@@ -22,15 +22,31 @@ else:
 
 import paramiko
 
-def ssh_command(host, user, pkey, command):
+def ssh_command(host_name, host_ip, user, pkey, command):
     '''
        Simple wrapper around paramiko
+
+       See http://stackoverflow.com/questions/13930858/what-error-exception-does-paramiko-throw-for-failed-connects
+       for possible Exceptions handling.
     '''
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(host, username=user, key_filename=pkey, look_for_keys=False)
-    stdin, stdout, stderr = ssh.exec_command(command)
-    return stdout.read().decode('utf-8'), stderr.read().decode('utf-8')
+    
+    try:
+        ssh.connect(host_ip, username=user, key_filename=pkey, look_for_keys=False, timeout=10)
+        stdin, stdout, stderr = ssh.exec_command(command)
+        return stdout.read().decode('utf-8'), stderr.read().decode('utf-8')
+    except paramiko.SSHException as e:
+        print("SSHException: Failed to connect to {} [{}@{}]".format(host_name, user, host_ip))
+    except paramiko.BadHostKeyException as e:
+        print("BadHostKeyException: Failed to connect to {} [{}@{}]".format(host_name, user, host_ip))
+    except paramiko.AuthenticationException as e:
+        print("AuthenticationException: Failed to connect to {} [{}@{}]".format(host_name, user, host_ip))
+    except socket.error  as e:
+        print("socket.error: Failed to connect to {} [{}@{}]".format(host_name, user, host_ip))
+    except Exception as e:
+        print("Failed to connect to {} [{}@{}]".format(host_name, user, host_ip))
+    return "",""
     #return str(stdout.read()), str(stderr.read())
 
 def strip_uptime(line):
