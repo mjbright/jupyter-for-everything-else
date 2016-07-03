@@ -33,6 +33,26 @@ def ssh_command(host, user, pkey, command):
     #print(str(stdout.read()))
     return str(stdout.read()), str(stderr.read())
 
+def strip_uptime(line):
+    '''
+       Strip the actual 'uptime' from the uptime output,
+       e.g. given
+            08:02:12 up 73 days, 18:12,  5 users,  load average: 0.04, 0.03, 0.05
+       return
+            73 days, 18:12
+    '''
+    #print(line)
+    up_pos = line.find(" up ")
+    if up_pos != -1:
+        up_str = line[up_pos + 4:]
+        comma_pos = up_str.find(",")
+        if comma_pos != -1:
+            comma_pos2 = up_str[comma_pos+1:].find(",")
+            if comma_pos2 != -1:
+                up_str=up_str[:comma_pos+comma_pos2+1]
+                return up_str
+    return ""
+
 def display_platform(platform_name):
     #dtstring = str(datetime.datetime.now())
     #dtstring = strftime("%Y-%m-%d %H:%M:%S", gmtime())
