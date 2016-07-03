@@ -3,12 +3,17 @@ from openstack import connection
 from openstack import profile
 from openstack import utils
 from openstackclient.common import clientmanager
-import sys
+import sys, os
 import os_client_config
 
 #from Monitoring_Tools import DictTable, ListTable, highlights, ok_highlight, warn_highlight, error_highlight
 from Monitoring_Tools import DictTable, ListTable, highlights, display_html_ping_endpoint_urls
 from IPython.core.display import display,HTML
+
+if os.getenv('VERBOSE', '0') == '0':
+    VERBOSE = False
+else:
+    VERBOSE = True
 
 
 '''
@@ -128,7 +133,7 @@ def showServerList(conn, showFlavors=False, showImages=False):
     
     flushfile.restore_stderr()
 
-def display_html_endpoint_urls(conn, verbose=False):
+def display_html_endpoint_urls(conn):
     from openstack import profile as _profile
     from openstack import exceptions as _exceptions
 
@@ -154,5 +159,5 @@ def display_html_endpoint_urls(conn, verbose=False):
                 #raise
                 print("Failed to determine {} service endpoint url".format(service))
 
-    display_html_ping_endpoint_urls(endpoint_urls, verbose=False)
+    display_html_ping_endpoint_urls(endpoint_urls)
 
