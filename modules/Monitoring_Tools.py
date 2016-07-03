@@ -13,6 +13,14 @@ from IPython.core.display import display,HTML,Javascript
 #import datetime
 from time import gmtime, strftime
 
+
+# Check if UNDER_CRON variable is set or not
+if os.getenv('UNDER_CRON', '0') == '0':
+    under_cron = False
+else:
+    under_cron = True
+
+
 def display_platform(platform_name):
     #dtstring = str(datetime.datetime.now())
     #dtstring = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -154,7 +162,8 @@ def ping_all(inventory, verbose=False):
             ip = host_entry['ansible_host']
         if 'ansible_ip' in host_entry:
             ip = host_entry['ansible_ip']
-        sys.stdout.write("ping({}[{}]) ... ".format(host, ip))
+        if not under_cron:
+            sys.stdout.write("ping({}[{}]) ... ".format(host, ip))
         #result = ping(ip, verbose)
         result = ping_cmd(ip, verbose)
         if result:
@@ -179,7 +188,8 @@ def html_ping_all(inventory, verbose=False):
         if 'ansible_ip' in host_entry:
             ip = host_entry['ansible_ip']
         host_info="{}[{}]".format(host, ip)
-        sys.stdout.write("ping({}) ... ".format(host_info))
+        if not under_cron:
+            sys.stdout.write("ping({}) ... ".format(host_info))
         #result = ping(ip, verbose)
         result = ping_cmd(ip, verbose)
         if result:
@@ -293,7 +303,8 @@ def html_ping_ports_all(inventory, group='ssh_check', ports=[22], verbose=False)
         for port in ports:
             ip_port=ip+":"+str(port)
             host_port_info="{}[{}]".format(host, ip_port)
-            sys.stdout.write("ping({}) ... ".format(host_port_info))
+            if not under_cron:
+                sys.stdout.write("ping({}) ... ".format(host_port_info))
             result = ping_port(ip, port, verbose, timeout=2)
             if result == 0:
                 results[host_port_info]="OK"
