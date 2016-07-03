@@ -243,11 +243,14 @@ def html_ping_all(inventory):
         host_info="{}[{}]".format(host, ip)
         if not UNDER_CRON:
             sys.stdout.write("ping({}) ... ".format(host_info))
-        #result = ping(ip, verbose)
-        result = ping_cmd(ip, verbose)
-        if result:
-            results[host_info]="OK: {} msec".format(result)
-        else:
+        #result = ping(ip)
+        try:
+            result = ping_cmd(ip)
+            if result:
+                results[host_info]="OK: {} msec".format(result)
+            else:
+                results[host_info]="TIMEOUT"
+        except Exception as e:
             results[host_info]="TIMEOUT"
              
     ping_highlights={
