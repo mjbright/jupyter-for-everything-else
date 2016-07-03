@@ -25,7 +25,7 @@ if os.getenv('VERBOSE', '0') == '0':
 else:
     VERBOSE = True
 
-import paramiko
+import paramiko, socket
 
 def ssh_command(host_name, host_ip, user, pkey, command):
     '''
