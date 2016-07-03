@@ -16,9 +16,9 @@ from time import gmtime, strftime
 
 # Check if UNDER_CRON variable is set or not
 if os.getenv('UNDER_CRON', '0') == '0':
-    under_cron = False
+    UNDER_CRON = False
 else:
-    under_cron = True
+    UNDER_CRON = True
 
 import paramiko
 
@@ -194,7 +194,7 @@ def ping_all(inventory, verbose=False):
             ip = host_entry['ansible_host']
         if 'ansible_ip' in host_entry:
             ip = host_entry['ansible_ip']
-        if not under_cron:
+        if not UNDER_CRON:
             sys.stdout.write("ping({}[{}]) ... ".format(host, ip))
         #result = ping(ip, verbose)
         result = ping_cmd(ip, verbose)
@@ -220,7 +220,7 @@ def html_ping_all(inventory, verbose=False):
         if 'ansible_ip' in host_entry:
             ip = host_entry['ansible_ip']
         host_info="{}[{}]".format(host, ip)
-        if not under_cron:
+        if not UNDER_CRON:
             sys.stdout.write("ping({}) ... ".format(host_info))
         #result = ping(ip, verbose)
         result = ping_cmd(ip, verbose)
@@ -335,7 +335,7 @@ def html_ping_ports_all(inventory, group='ssh_check', ports=[22], verbose=False)
         for port in ports:
             ip_port=ip+":"+str(port)
             host_port_info="{}[{}]".format(host, ip_port)
-            if not under_cron:
+            if not UNDER_CRON:
                 sys.stdout.write("ping({}) ... ".format(host_port_info))
             result = ping_port(ip, port, verbose, timeout=2)
             if result == 0:
