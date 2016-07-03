@@ -404,6 +404,7 @@ def show_notebook_url(platform, host_ip, port=8888):
     url = get_notebook_url(platform, host_ip, port)
     html='<h4>The latest version of this status is available at <a href="' + url + '">' + url + '</a></h4>'
     display(HTML( html ))
+    return url
 
 def get_notebook_url(platform, host_ip, port=8888):
     # import jupyter_client
