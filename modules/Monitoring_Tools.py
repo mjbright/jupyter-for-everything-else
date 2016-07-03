@@ -20,6 +20,18 @@ if os.getenv('UNDER_CRON', '0') == '0':
 else:
     under_cron = True
 
+import paramiko
+
+def ssh_command(host, user, pkey, command):
+    '''
+       Simple wrapper around paramiko
+    '''
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(host, username=user, key_filename=pkey, look_for_keys=False)
+    stdin, stdout, stderr = ssh.exec_command(command)
+    #print(str(stdout.read()))
+    return str(stdout.read()), str(stderr.read())
 
 def display_platform(platform_name):
     #dtstring = str(datetime.datetime.now())
