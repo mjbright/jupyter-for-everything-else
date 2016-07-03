@@ -30,8 +30,8 @@ def ssh_command(host, user, pkey, command):
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(host, username=user, key_filename=pkey, look_for_keys=False)
     stdin, stdout, stderr = ssh.exec_command(command)
-    #print(str(stdout.read()))
-    return str(stdout.read()), str(stderr.read())
+    return stdout.read().decode('utf-8'), stderr.read().decode('utf-8')
+    #return str(stdout.read()), str(stderr.read())
 
 def strip_uptime(line):
     '''
