@@ -2,12 +2,18 @@
 from openstack import connection
 from openstack import profile
 from openstack import utils
-import sys
+from openstackclient.common import clientmanager
+import sys, os
 import os_client_config
 
 #from Monitoring_Tools import DictTable, ListTable, highlights, ok_highlight, warn_highlight, error_highlight
 from Monitoring_Tools import DictTable, ListTable, highlights, display_html_ping_endpoint_urls
 from IPython.core.display import display,HTML
+
+if os.getenv('VERBOSE', '0') == '0':
+    VERBOSE = False
+else:
+    VERBOSE = True
 
 
 '''
@@ -79,46 +85,55 @@ def showServerList(conn, showFlavors=False, showImages=False):
 
     flushfile.save_stderr()
 
-    flavors = conn.compute.flavors()
-    print("{} flavors".format(sum(1 for i in flavors)))
-    flavors = conn.compute.flavors()
-    for f in flavors:
-        #print("FLAVOR: " + f['name'])
-        flavor_names[f['id']]=f['name']
+    try:
+        flavors = conn.compute.flavors()
+        print("{} flavors".format(sum(1 for i in flavors)))
+        flavors = conn.compute.flavors()
+        for f in flavors:
+            #print("FLAVOR: " + f['name'])
+            flavor_names[f['id']]=f['name']
 
-    if showFlavors:
-        html = DictTable._repr_html_(flavor_names, highlights=None)
-        #print(html)
+        if showFlavors:
+            html = DictTable._repr_html_(flavor_names, highlights=None)
+            #print(html)
+            display( HTML(html) )
+    except Exception as e:
+        print("Failed to determine number of flavors")
+
+    try:
+        images = conn.compute.images()
+        print("{} images".format(sum(1 for i in images)))
+        images = conn.compute.images()
+        for i in images:
+            #print("IMAGE: " + i['name'])
+            image_names[i['id']]=i['name']
+
+        if showImages:
+            html = DictTable._repr_html_(image_names, highlights=None)
+            #print(html)
+            display( HTML(html) )
+    except Exception as e:
+        print("Failed to determine number of images")
+
+    try:
+        headers=['name','status','flavor','image','addresses']
+        servers_list = [ [ '<center><b>'+h+'</b></center>' for h in headers ] ]
+        servers = conn.compute.servers()
+        print("{} servers".format(sum(1 for i in servers)))
+        servers = conn.compute.servers()
+        for s in servers:
+            s_list = getServerFields(s, headers, flavor_names, image_names)
+            servers_list += [ s_list ]
+        #print(highlights)
+        html = ListTable._repr_html_(servers_list, highlights)
         display( HTML(html) )
+    except Exception as e:
+        print("Failed to determine number of servers")
 
-    images = conn.compute.images()
-    print("{} images".format(sum(1 for i in images)))
-    images = conn.compute.images()
-    for i in images:
-        #print("IMAGE: " + i['name'])
-        image_names[i['id']]=i['name']
-
-    if showImages:
-        html = DictTable._repr_html_(image_names, highlights=None)
-        #print(html)
-        display( HTML(html) )
-
-    headers=['name','status','flavor','image','addresses']
-    servers_list = [ [ '<center><b>'+h+'</b></center>' for h in headers ] ]
-    servers = conn.compute.servers()
-    print("{} servers".format(sum(1 for i in servers)))
-    servers = conn.compute.servers()
-    for s in servers:
-        s_list = getServerFields(s, headers, flavor_names, image_names)
-        servers_list += [ s_list ]
-
-    #print(highlights)
-    html = ListTable._repr_html_(servers_list, highlights)
-    display( HTML(html) )
     
     flushfile.restore_stderr()
 
-def display_html_endpoint_urls(conn, verbose=False):
+def display_html_endpoint_urls(conn):
     from openstack import profile as _profile
     from openstack import exceptions as _exceptions
 
@@ -140,8 +155,9 @@ def display_html_endpoint_urls(conn, verbose=False):
                 endpoint_urls[service]=url
             #except _exceptions.EndpointNotFound:
             #    pass
-            except Exception(e):
-                raise
+            except Exception as e:
+                #raise
+                print("Failed to determine {} service endpoint url".format(service))
 
-    display_html_ping_endpoint_urls(endpoint_urls, verbose=False)
+    display_html_ping_endpoint_urls(endpoint_urls)
 
