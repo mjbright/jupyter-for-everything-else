@@ -224,7 +224,9 @@ def ping_all(inventory):
         #print("ping({}[{}] => {})".format(host, result, ip))
         
 def display_html_ping_all(inventory):
-    display(HTML( html_ping_all(inventory) ))
+    html, status = html_ping_all(inventory)
+    display(HTML( html ))
+    return status
 
 def html_ping_all(inventory):
     
@@ -233,7 +235,7 @@ def html_ping_all(inventory):
     for host in sorted(inventory['ping_check']):
         if not host in inventory['hosts']:
             print("Error: host <{}> not in hosts".format(host))
-            return None
+            return None, "ERROR"
         host_entry = inventory['hosts'][host]
         ip=host
         if 'ansible_host' in host_entry:
@@ -250,6 +252,8 @@ def html_ping_all(inventory):
                 results[host_info]="OK: {} msec".format(result)
             else:
                 results[host_info]="TIMEOUT"
+        except KeyboardInterrupt:
+            results[host_info]="TIMEOUT"
         except Exception as e:
             results[host_info]="TIMEOUT"
              
@@ -257,7 +261,7 @@ def html_ping_all(inventory):
         'OK':      ok_highlight,
         'TIMEOUT': error_highlight,
     }
-    return DictTable._repr_html_(results, ping_highlights)
+    return DictTable._repr_html_(results, ping_highlights), "OK"
 
 
 def ping_port(host, port,timeout=None):
@@ -339,7 +343,9 @@ class ListTable(list):
 
 
 def display_html_ping_ports_all(inventory, group='ssh_check', ports=[22]):
-     display(HTML( html_ping_ports_all(inventory, group, ports)))
+     html, status = html_ping_ports_all(inventory, group, ports)
+     display(HTML( html ))
+     return status
 
 def html_ping_ports_all(inventory, group='ssh_check', ports=[22]):
 
@@ -348,7 +354,7 @@ def html_ping_ports_all(inventory, group='ssh_check', ports=[22]):
     for host in sorted(inventory['ssh_check']):
         if not host in inventory['hosts']:
             print("Error: host <{}> not in hosts".format(host))
-            return None
+            return None, "ERROR"
         host_entry = inventory['hosts'][host]
         ip=host
         if 'ansible_host' in host_entry:
@@ -371,14 +377,16 @@ def html_ping_ports_all(inventory, group='ssh_check', ports=[22]):
         'OK':      ok_highlight,
         'TIMEOUT': error_highlight,
     }
-    return DictTable._repr_html_(results, ping_highlights)
+    return DictTable._repr_html_(results, ping_highlights), "OK"
 
 
 def display_html(html):
     display(HTML( html ))
 
 def display_html_ping_endpoint_urls(endpoint_urls):
-    display(HTML( html_ping_endpoint_urls(endpoint_urls)))
+    html, status = html_ping_endpoint_urls(endpoint_urls)
+    display(HTML( html ))
+    return status
 
 def html_ping_endpoint_urls(endpoint_urls):
 
@@ -406,7 +414,7 @@ def html_ping_endpoint_urls(endpoint_urls):
         'OK':      ok_highlight,
         'TIMEOUT': error_highlight,
     }
-    return DictTable._repr_html_(results, ping_highlights)
+    return DictTable._repr_html_(results, ping_highlights), "OK"
 
 """
 Doesn't work in html copy of notebook, as e-mail client won't run the javascript:

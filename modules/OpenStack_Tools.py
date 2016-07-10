@@ -5,9 +5,10 @@ from openstack import utils
 from openstackclient.common import clientmanager
 import sys, os
 import os_client_config
+import traceback
 
 #from Monitoring_Tools import DictTable, ListTable, highlights, ok_highlight, warn_highlight, error_highlight
-from Monitoring_Tools import DictTable, ListTable, highlights, display_html_ping_endpoint_urls
+from Monitoring_Tools import DictTable, ListTable, highlights, html_ping_endpoint_urls
 from IPython.core.display import display,HTML
 
 if os.getenv('VERBOSE', '0') == '0':
@@ -120,20 +121,27 @@ def showServerList(conn, showFlavors=False, showImages=False):
         servers_list = [ [ '<center><b>'+h+'</b></center>' for h in headers ] ]
         servers = conn.compute.servers()
         print("{} servers".format(sum(1 for i in servers)))
+        #print(highlights)
+    except Exception as e:
+        print("Failed to determine number of servers: " + str(e))
+
+    try:
         servers = conn.compute.servers()
         for s in servers:
+            print(s)
             s_list = getServerFields(s, headers, flavor_names, image_names)
+            print(s_list)
             servers_list += [ s_list ]
-        #print(highlights)
-        html = ListTable._repr_html_(servers_list, highlights)
-        display( HTML(html) )
     except Exception as e:
-        print("Failed to determine number of servers")
+        print("Failed to enumerate servers: " + str(e))
+        traceback.print_exc(file=sys.stdout)
 
+    html = ListTable._repr_html_(servers_list, highlights)
+    display( HTML(html) )
     
     flushfile.restore_stderr()
 
-def display_html_endpoint_urls(conn):
+def html_endpoint_urls(conn):
     from openstack import profile as _profile
     from openstack import exceptions as _exceptions
 
@@ -159,5 +167,11 @@ def display_html_endpoint_urls(conn):
                 #raise
                 print("Failed to determine {} service endpoint url".format(service))
 
-    display_html_ping_endpoint_urls(endpoint_urls)
+    return html_ping_endpoint_urls(endpoint_urls)
+
+def display_html_endpoint_urls(conn):
+    html, status = html_endpoint_urls(conn)
+    display( HTML(html) )
+    return status
+
 
