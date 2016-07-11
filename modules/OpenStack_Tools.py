@@ -45,13 +45,21 @@ def getServerFields(server, fields, flavor_names, image_names):
                 text += network['addr'] + '<br/>'
             values.append( text )
         elif field == 'flavor':
-            id = server[field]['id']
-            #print("server[{}]['id']={}".format(field,id))
-            values.append( "<u>{}</u><br/>[{}]".format(flavor_names[ id ], id) )
+            if 'id' in server[field]:
+                fieldid = server[field]['id']
+                value = flavor_names[ fieldid ]
+            else:
+                fieldid = "None"
+                value = "None"
+            values.append( "<u>{}</u><br/>[{}]".format(value, fieldid) )
         elif field == 'image':
-            id = server[field]['id']
-            #print("server[{}]['id']={}".format(field,id))
-            values.append( "<u>{}</u><br/>[{}]".format(image_names[ id ], id) )
+            if 'id' in server[field]:
+                fieldid = server[field]['id']
+                value = image_names[ fieldid ]
+            else:
+                fieldid = "None"
+                value = "None"
+            values.append( "<u>{}</u><br/>[{}]".format(value, fieldid) )
         elif field in server:
             values.append( server[field] )
         else:
@@ -128,9 +136,11 @@ def showServerList(conn, showFlavors=False, showImages=False):
     try:
         servers = conn.compute.servers()
         for s in servers:
-            print(s)
+            #print("SERVER=" + str(s))
+
             s_list = getServerFields(s, headers, flavor_names, image_names)
-            print(s_list)
+            #print("SERVER fields=" + str(s_list))
+
             servers_list += [ s_list ]
     except Exception as e:
         print("Failed to enumerate servers: " + str(e))
