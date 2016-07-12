@@ -88,9 +88,9 @@ def display_platform(platform_name):
     #dtstring = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     display( HTML( platform_info(platform_name) ))
 
-def html_platform_info(platform_name):
+def html_platform_info(platform_name, extra_html=''):
     dtstring = strftime("%Y-%m-%d %H:%M:%S")
-    return '<h1>Platform: ' + platform_name + '</h1>' + '<h4>Run at: ' + dtstring + '</h4>'
+    return '<h2>Platform: ' + platform_name + '</h2>' + '<h4>Run at: ' + dtstring + '</h4>'+extra_html
 
 def read_inventory(hosts_file):
     hosts_file = hosts_file.replace('~', os.getenv('HOME')).replace('$HOME', os.getenv('HOME'))
