@@ -86,7 +86,7 @@ def strip_uptime(line):
 def display_platform(platform_name):
     #dtstring = str(datetime.datetime.now())
     #dtstring = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-    display( HTML( platform_info(platform_name) ))
+    display( HTML( html_platform_info(platform_name) ))
 
 def html_platform_info(platform_name, extra_html=''):
     dtstring = strftime("%Y-%m-%d %H:%M:%S")
