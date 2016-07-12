@@ -88,6 +88,10 @@ class flushfile():
         sys.stderr = flushfile.oldstderr
         
 def showServerList(conn, showFlavors=False, showImages=False):
+    html = getServerList(conn, showFlavors, showImages)
+    display( HTML(html) )
+
+def getServerList(conn, showFlavors=False, showImages=False):
     servers_list=[]
     flavor_names={}
     image_names={}
@@ -147,9 +151,10 @@ def showServerList(conn, showFlavors=False, showImages=False):
         traceback.print_exc(file=sys.stdout)
 
     html = ListTable._repr_html_(servers_list, highlights)
-    display( HTML(html) )
-    
+
     flushfile.restore_stderr()
+
+    return html, "OK"
 
 def html_endpoint_urls(conn):
     from openstack import profile as _profile
