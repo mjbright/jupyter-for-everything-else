@@ -88,9 +88,10 @@ class flushfile():
     def restore_stderr():
         sys.stderr = flushfile.oldstderr
         
-def showServerList(conn, showFlavors=False, showImages=False):
-    html = getServerList(conn, showFlavors, showImages)
+def displayServerList(conn, showFlavors=False, showImages=False):
+    html, STATUS = getServerList(conn, showFlavors, showImages)
     display( HTML(html) )
+    return STATUS
 
 def getServerList(conn, showFlavors=False, showImages=False):
     servers_list=[]
