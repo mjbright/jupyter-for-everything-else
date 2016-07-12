@@ -13,6 +13,15 @@ from IPython.core.display import display,HTML,Javascript
 #import datetime
 from time import gmtime, strftime
 
+error_highlight='<div style="background-color: red; color: white"><b>{}</b></div>'
+warn_highlight='<div style="background-color: orange; color: white"><b>{}</b></div>'
+ok_highlight='<div style="background-color: green; color: white"><b>{}</b></div>'
+
+STATUS_HIGHLIGHTS={
+    'OK':      ok_highlight,
+    'WARN':  warn_highlight,
+    'ERROR': error_highlight,
+}
 
 # Check if UNDER_CRON variable is set or not
 if os.getenv('UNDER_CRON', '0') == '0':
