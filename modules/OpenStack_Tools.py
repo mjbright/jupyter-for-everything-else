@@ -190,4 +190,43 @@ def display_html_endpoint_urls(conn):
     display( HTML(html) )
     return status
 
+def platformStatus(platform):
+    HTML_OP=''
+    
+    show_notebook_url(platform, host_ip="10.3.216.210", port=8888)
+    HTML_OP += '<b>' + html_platform_info(platform, '<a href="#RESULTS_STATUS"> Return to Top (RESULTS_STATUS) </a>')+ '</b>'
+    
+    ini_file="$HOME/env/{}_hosts.ini".format(platform)
+    if VERBOSE:
+        print("Reading " + ini_file)
+
+    inventory = read_inventory(ini_file)
+    
+    if VERBOSE:
+        print("Connecting to cloud: " + platform)
+    conn = connectToCloud(platform)
+    
+    if VERBOSE:
+        print("Pinging ...")
+    HTML, PING_STATUS = html_ping_all(inventory)
+    HTML_OP += HTML
+    
+    if VERBOSE:
+        print("Get server/flavor/image list ...")
+    HTML, VMS_STATUS = getServerList( conn )
+    HTML_OP += HTML
+    
+    if VERBOSE:
+        print("Pinging ports ...")
+    HTML, PING_PORTS_STATUS = html_ping_ports_all(inventory)
+    HTML_OP += HTML
+    
+    if VERBOSE:
+        print("Pinging endpoints ...")
+    HTML, ENDPOINTS_STATUS = html_endpoint_urls(conn)
+    HTML_OP += HTML
+    
+    #archive_df(inventory)
+    return HTML_OP, PING_STATUS, VMS_STATUS, PING_PORTS_STATUS, ENDPOINTS_STATUS
+
 
