@@ -304,9 +304,16 @@ highlights={
 
 def applyHighlights(value, highlights):
     for highlight in highlights.keys():
-        if str(value).lower()[:len(highlight)] == highlight.lower():
-        #if highlight in str(value).lower():
-            value=highlights[highlight].format(str(value))
+        str_value=str(value)
+        lc_value=str(value).lower()
+        if str_value[:len(highlight)] == highlight:
+            value=highlights[highlight].format(str_value)
+
+        elif lc_value[:len(highlight)] == highlight.lower():
+            value=highlights[highlight].format(str(lc_value))
+
+        #if highlight.lower() in lc_value:
+        #    value=lc_value.replace(lc_value, highlights[highlight].format(lc_value))
             
     return value
 
