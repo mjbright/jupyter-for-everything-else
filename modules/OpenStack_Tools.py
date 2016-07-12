@@ -8,7 +8,8 @@ import os_client_config
 import traceback
 
 #from Monitoring_Tools import DictTable, ListTable, highlights, ok_highlight, warn_highlight, error_highlight
-from Monitoring_Tools import DictTable, ListTable, highlights, html_ping_endpoint_urls
+#from Monitoring_Tools import DictTable, ListTable, highlights, html_ping_endpoint_urls
+from Monitoring_Tools import *
 from IPython.core.display import display,HTML
 
 if os.getenv('VERBOSE', '0') == '0':
