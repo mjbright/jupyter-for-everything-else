@@ -327,11 +327,24 @@ class DictTable(dict):
     def _repr_html_(self, highlights=None):
         html = [ '''<table style="border: 1px solid black; border-style: collapse;" border="1" width=100%>''' ]
         #for key, value in self.items():
+
+        headerSeen=False
         for key in sorted(self):
             value = self[key]
 
+            ''' If the first column starts with '--' we assume this row is the header and make it bold'''
+            td='<td>'
+            _td='</td>'
+            if not headerSeen and key[0:2] == '--':
+                key = key[2:]
+                td='<td><b>'
+                _td='</b></td>'
+                headerSeen = True
+
+            _tdtd=_td+td
+
             html.append("<tr>")
-            html.append("<td>{0}</td>".format(key))
+            html.append("{}{}{}".format(td, key, _td))
 
             # If a tuple, convert to list:
             if type(value) is tuple:
@@ -340,17 +353,16 @@ class DictTable(dict):
             # If a list, expand to <td>'s:
             if type(value) is list:
                 if highlights:
-                    value='</td><td>'.join( [ applyHighlights(val, highlights) for val in value] )
+                    value=_tdtd.join( [ applyHighlights(val, highlights) for val in value] )
                 else:
-                    value='</td><td>'.join(value)
-                html.append("<td>{0}</td>".format(value))
+                    value=_tdtd.join(value)
             else:
                 if highlights:
-                    html.append("<td>{0}</td>".format(applyHighlights(value, highlights)))
-                else:
-                    html.append("<td>{0}</td>".format(value))
+                    value=applyHighlights(value, highlights)
 
+            html.append("{}{}{}".format(td, value, _td))
             html.append("</tr>")
+
         html.append("</table>")
         return ''.join(html)
     
