@@ -328,10 +328,24 @@ class DictTable(dict):
 
             html.append("<tr>")
             html.append("<td>{0}</td>".format(key))
-            if highlights:
-                html.append("<td>{0}</td>".format(applyHighlights(value, highlights)))
-            else:
+
+            # If a tuple, convert to list:
+            if type(value) is tuple:
+                value=list(value)
+
+            # If a list, expand to <td>'s:
+            if type(value) is list:
+                if highlights:
+                    value='</td><td>'.join( [ applyHighlights(val, highlights) for val in value] )
+                else:
+                    value='</td><td>'.join(value)
                 html.append("<td>{0}</td>".format(value))
+            else:
+                if highlights:
+                    html.append("<td>{0}</td>".format(applyHighlights(value, highlights)))
+                else:
+                    html.append("<td>{0}</td>".format(value))
+
             html.append("</tr>")
         html.append("</table>")
         return ''.join(html)
