@@ -312,7 +312,7 @@ class DictTable(dict):
     # Overridden dict class which takes a dict in the form {'a': 2, 'b': 3},
     # and renders an HTML Table in IPython Notebook.
     def _repr_html_(self, highlights=None):
-        html = [ '''<table style="border: 1px solid black; border-style: collapse;" border="1" width=100%>'''' ]
+        html = [ '''<table style="border: 1px solid black; border-style: collapse;" border="1" width=100%>''' ]
         #for key, value in self.items():
         for key in sorted(self):
             value = self[key]
@@ -331,7 +331,7 @@ class ListTable(list):
     # Overridden list class which takes a list,
     # and renders an HTML Table in IPython Notebook.
     def _repr_html_(self, highlights=None):
-        html = [ '''<table style="border: 1px solid black; border-style: collapse;" border="1" width=100%>"''' ]
+        html = [ '''<table style="border: 1px solid black; border-style: collapse;" border="1" width=100%>''' ]
         
         for row in self:
             html.append("<tr>")
