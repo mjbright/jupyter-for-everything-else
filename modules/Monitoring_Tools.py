@@ -297,11 +297,6 @@ def ping_port(host, port,timeout=None):
     return ret
 
 
-
-error_highlight='<div style="background-color: red; color: white"><b>{}</b></div>'
-warn_highlight='<div style="background-color: orange; color: white"><b>{}</b></div>'
-ok_highlight='<div style="background-color: green; color: white"><b>{}</b></div>'
-
 highlights={
     'active':   ok_highlight,
     'inactive': warn_highlight,
