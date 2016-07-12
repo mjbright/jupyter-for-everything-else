@@ -232,10 +232,13 @@ def html_ping_all(inventory):
     
     results=dict()
     
+    ping_checks=0
     for host in sorted(inventory['ping_check']):
         if not host in inventory['hosts']:
             print("Error: host <{}> not in hosts".format(host))
             return None, "ERROR"
+
+        ping_checks += 1
         host_entry = inventory['hosts'][host]
         ip=host
         if 'ansible_host' in host_entry:
@@ -257,6 +260,9 @@ def html_ping_all(inventory):
         except Exception as e:
             results[host_info]="TIMEOUT"
              
+    if ping_checks == 0:
+        return "<b>No ping_check entries in inventory</b>", "OK"
+
     ping_highlights={
         'OK':      ok_highlight,
         'TIMEOUT': error_highlight,
