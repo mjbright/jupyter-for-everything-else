@@ -34,8 +34,8 @@ RUN cd ~/src/git/ && \
     cd ~/src/git/RISE && \
     python setup.py install
 
-# ---- Install xonsh
-RUN pip install --user xonsh 
+#### # ---- Install xonsh
+#### RUN pip install --user xonsh 
 
 # ---- Show installed kernels and python/pip versions:
 RUN jupyter kernelspec list
