@@ -15,7 +15,7 @@ from time import gmtime, strftime
 
 error_highlight='<div style="background-color: red; color: white"><b>{}</b></div>'
 warn_highlight='<div style="background-color: orange; color: white"><b>{}</b></div>'
-ok_highlight='<div style="background-color: green; color: white"><b>{}</b></div>'
+ok_highlight='<div style="background-color: lightgreen; color: white"><b>{}</b></div>'
 
 STATUS_HIGHLIGHTS={
     'OK':      ok_highlight,
@@ -495,3 +495,105 @@ def get_notebook_url(platform, host_ip, port=8888):
      #http://10.3.216.210:8888/notebooks/notebooks/cron/OpenStack_Monitoring_Py3.ipynb
     return url
 
+def displayDiskPCTable(DISK_USAGE, thresholds=[70,90], colours=['lightgreen','orange','red']):
+    highestpc, html = diskPCTable(DISK_USAGE, thresholds, colours)
+    display(HTML(html))
+    return highestpc
+
+def diskPCCell(pc, pcwidth, thresholds=[70,90], colours=['lightgreen','orange','red']):
+    
+    colour=colours[0]
+    for t in range(len(thresholds)):
+        if pc >= thresholds[t]:
+            colour=colours[t+1]
+            
+    width = 1+int(pcwidth * pc)
+    html_cell = "<td width={}% border=0 class='noborder' style='color: #000; background-color: {};'><b>{}%</b></td><td></td>".format(width,colour,pc)
+    return "<table><tr>" + html_cell + "</tr></table>"
+    
+def diskPCTable(DISK_USAGE, thresholds=[70,90], colours=['lightgreen','orange','red']):
+    HTML_TABLE="<table><tbody>{}</tbody></table>"
+    elements={}
+    
+    for host in DISK_USAGE.keys():
+        #print("host: " + host + " " + str(DISK_USAGE[host]))
+        for partn in DISK_USAGE[host].keys():
+            pc = DISK_USAGE[host][partn]
+            #print("{}:{} {}%".format(host, partn, pc))
+            hp = host + ':' + partn
+            if pc in elements:
+                elements[pc].append( hp )
+            else:
+                elements[pc] = [ hp ]
+    
+    reverse_sorted_keys=sorted(elements.keys(), reverse=True)
+    highestpc=reverse_sorted_keys[0]
+    highestpc_label=elements[highestpc]
+    
+    #thresholds.append(100)
+    table_rows=''
+    
+    for pc in reverse_sorted_keys:
+        for label in elements[pc]:
+            #TEST: import random
+            #TEST: pc = random.randrange(0, 101, 2)
+
+            table_rows = "<table width=700 class='noborder'>"
+            PC_HOST="<b>{}</b>".format(label)
+            PC = diskPCCell(pc, 0.8, thresholds, colours)
+
+            table_rows += '<tr><td width=20%>' + PC_HOST + '</td><td>' + PC + '</td></tr>'
+            
+    html_table=HTML_TABLE.format(table_rows)
+    #print(table)
+    #display(HTML(table))
+    return highestpc, highestpc_label, html_table
+
+def archive_df(inventory, platform):
+    #TODO: ! [ ! -d history ] && mkdir history
+
+    import datetime
+    import time
+
+    #d = datetime.date.today().strftime("%B %d, %Y")
+    #dt = datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
+    d = datetime.date.today().strftime("%Y-%m-%d")
+    dt = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M")
+    if VERBOSE:
+        print(d)
+        print(dt)
+
+    DISK_USAGE={}
+    for host in sorted(inventory['df_check']):    
+        ip = inventory['hosts'][host]['ansible_host']
+        user = inventory['hosts'][host]['ansible_user']
+        pkey = inventory['hosts'][host]['ssh_key']
+        df_check = inventory['hosts'][host]['df_check']
+
+        # write to history subdir (~/notebooks/cron for cron jobs)
+        history_file='history/df_history_' + platform + '_' + host + '.txt'
+        history_fd = open(history_file, 'a')
+
+        full_df_cmd="hostname; df 2>&1"
+        df_op, stderr = ssh_command(host, ip, user, pkey, full_df_cmd)    
+        history_fd.write('DATE:' + dt + '\n' + df_op)
+        history_fd.close()
+
+        df_cmd="df " + df_check.replace(",", " ") + "| grep -v ^Filesystem"
+        df_op, stderr = ssh_command(host, ip, user, pkey, df_cmd)    
+        #df_op = stdout.decode('utf8')
+        #print("HOST[" + host + "]<" + df_check + ">{" + df_cmd +"}:" + df_op)
+
+        DISK_USAGE[host]={}
+        df_lines=df_op.split("\n")
+        for df_line in df_lines:
+            #print("LINE: " + df_line)
+            pc_pos = df_line.find("%")
+            if pc_pos != -1:
+                pc=int(df_line[pc_pos-3:pc_pos])
+                partn=df_line[pc_pos+1:]
+                if VERBOSE:
+                    print(host + " " + str(pc) + "% " + partn)
+                DISK_USAGE[host][partn]=pc
+
+    return DISK_USAGE

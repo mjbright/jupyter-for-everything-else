@@ -228,6 +228,6 @@ def platformStatus(platform):
     HTML_OP += HTML
     
     #archive_df(inventory)
-    return HTML_OP, PING_STATUS, VMS_STATUS, PING_PORTS_STATUS, ENDPOINTS_STATUS
+    return inventory, HTML_OP, PING_STATUS, VMS_STATUS, PING_PORTS_STATUS, ENDPOINTS_STATUS
 
 
