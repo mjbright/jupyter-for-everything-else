@@ -191,7 +191,7 @@ def display_html_endpoint_urls(conn):
     display( HTML(html) )
     return status
 
-def platformStatus(platform):
+def platformStatus(platform, disk_thresholds):
     HTML_OP=''
     
     show_notebook_url(platform, host_ip="10.3.216.210", port=8888)
@@ -227,7 +227,14 @@ def platformStatus(platform):
     HTML, ENDPOINTS_STATUS = html_endpoint_urls(conn)
     HTML_OP += HTML
     
-    #archive_df(inventory)
-    return inventory, HTML_OP, PING_STATUS, VMS_STATUS, PING_PORTS_STATUS, ENDPOINTS_STATUS
+    DISK_USAGE = archive_df(inventory, platform)
+
+    HIGHEST_DISK_PC, HIGHEST_DISK_PC_HOST, DF_TABLE_HTML = diskPCTable(DISK_USAGE, thresholds=disk_thresholds, colours=['lightgreen','orange','red'])
+    #HIGHEST_DISK_PC = diskPCCell(highestpc, 0.5, thresholds, colours)
+    #HIGHEST_DISK_PC_HOST = '<b>{}</b>'.format(highestpc_label)
+
+    HTML_OP += DF_TABLE_HTML
+
+    return inventory, HTML_OP, PING_STATUS, VMS_STATUS, PING_PORTS_STATUS, ENDPOINTS_STATUS, HIGHEST_DISK_PC, HIGHEST_DISK_PC_HOST
 
 

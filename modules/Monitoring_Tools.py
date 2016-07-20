@@ -299,11 +299,12 @@ def ping_port(host, port,timeout=None):
 
 highlights={
     'active':   ok_highlight,
+    'none':     warn_highlight,
     'inactive': warn_highlight,
     'down':     warn_highlight,
     'stop':     warn_highlight,
     'fail':     error_highlight,
-    'error':     error_highlight,
+    'error':    error_highlight,
 }
 
 def applyHighlights(value, highlights):
@@ -324,8 +325,8 @@ def applyHighlights(value, highlights):
 class DictTable(dict):
     # Overridden dict class which takes a dict in the form {'a': 2, 'b': 3},
     # and renders an HTML Table in IPython Notebook.
-    def _repr_html_(self, highlights=None):
-        html = [ '''<table style="border: 1px solid black; border-style: collapse;" border="1" width=100%>''' ]
+    def _repr_html_(self, highlights=None, widths=None):
+        html = [ '''<table width=1000 style="border: 1px solid black; border-style: collapse;" border="1" width=100%>''' ]
         #for key, value in self.items():
 
         headerSeen=False
@@ -337,6 +338,10 @@ class DictTable(dict):
             _td='</td>'
             if not headerSeen and key[0:2] == '--':
                 key = key[2:]
+                #tdwidth=''
+                #if widths == None:
+                    #tdwidth=' width={}%'.format(XX)
+                #td='<td{}><b>'.format(tdwidth)
                 td='<td><b>'
                 _td='</b></td>'
                 headerSeen = True
@@ -353,7 +358,8 @@ class DictTable(dict):
             # If a list, expand to <td>'s:
             if type(value) is list:
                 if highlights:
-                    value=_tdtd.join( [ applyHighlights(val, highlights) for val in value] )
+                    #print(str(value))
+                    value=_tdtd.join( [ applyHighlights(str(val), highlights) for val in value] )
                 else:
                     value=_tdtd.join(value)
             else:
@@ -361,9 +367,9 @@ class DictTable(dict):
                     value=applyHighlights(value, highlights)
 
             html.append("{}{}{}".format(td, value, _td))
-            html.append("</tr>")
+            html.append("</tr>\n")
 
-        html.append("</table>")
+        html.append("</table>\n")
         return ''.join(html)
     
 class ListTable(list):
@@ -382,8 +388,8 @@ class ListTable(list):
                 else:
                     html.append("<td>{0}</td>".format(s_elem))
 
-            html.append("</tr>")
-        html.append("</table>")
+            html.append("</tr>\n")
+        html.append("</table>\n")
         return ''.join(html)
 
 
@@ -500,19 +506,46 @@ def displayDiskPCTable(DISK_USAGE, thresholds=[70,90], colours=['lightgreen','or
     display(HTML(html))
     return highestpc
 
-def diskPCCell(pc, pcwidth, thresholds=[70,90], colours=['lightgreen','orange','red']):
+def diskPCBarChart(label, pcs, thresholds=[70,90], colours=['lightgreen','orange','red'], orientation='height'):
+    HTML_TABLE="<table class='noborder' height=120><tbody><tr>\n{}</tr></tbody></table>\n"
+    table_rows = ""
+
+    #table_rows += "<tr>"
+    #PC_HOST="<b>{}</b>".format(label)
+    for pc in pcs:
+        #table_rows += "<td><table class='noborder'><tr>"
+        PC = diskPCCell(pc, 0.8, thresholds, colours, orientation)
+
+        #table_rows += '<tr><td width=20%>' + PC_HOST + '</td><td>' + PC + '</td></tr>\n'
+        #table_rows += '<td>' + PC + '</td>'
+        table_rows += PC
+        #table_rows += "</tr>\n</table>\n</td>"
+            
+    #table_rows += "</tr>\n"
+    html_table=HTML_TABLE.format(table_rows)
+    return html_table
+
+def diskPCCell(pc, pcwidth, thresholds=[70,90], colours=['lightgreen','orange','red'], orientation='width'):
     
     colour=colours[0]
     for t in range(len(thresholds)):
         if pc >= thresholds[t]:
             colour=colours[t+1]
             
-    width = 1+int(pcwidth * pc)
-    html_cell = "<td width={}% border=0 class='noborder' style='color: #000; background-color: {};'><b>{}%</b></td><td></td>".format(width,colour,pc)
-    return "<table><tr>" + html_cell + "</tr></table>"
+    #width = 1+int(pcwidth * pc)
+    if orientation == 'width':
+        html_cell = "<tr><td class='noborder' style='color: #000; background-color: {};' width={}%><b>{}%</b></td><td></td></tr>".format(colour,pc,pc)
+        return "<table class='noborder'><tr>" + html_cell + "</tr>\n</table>\n"
+    else:
+        html_cell = "<td><table class='noborder'>\n  "
+        html_cell += "<tr height={} style='vertical-align:bottom;'><td class='noborder' style='vertical-align:bottom; color: #000; background-color: {};'><b>{}%</b></td></tr><tr><td style='vertical-align:bottom;'></td></tr>".format(pc, colour, pc)
+        html_cell += "</table></td>\n  "
+        return html_cell
+    #return "<table class='noborder'><tr>" + html_cell + "</tr>\n</table>\n"
+    return "____NEVER____"
     
 def diskPCTable(DISK_USAGE, thresholds=[70,90], colours=['lightgreen','orange','red']):
-    HTML_TABLE="<table><tbody>{}</tbody></table>"
+    HTML_TABLE="<table><tbody>\n{}</tbody></table>\n"
     elements={}
     
     for host in DISK_USAGE.keys():
@@ -538,11 +571,16 @@ def diskPCTable(DISK_USAGE, thresholds=[70,90], colours=['lightgreen','orange','
             #TEST: import random
             #TEST: pc = random.randrange(0, 101, 2)
 
-            table_rows = "<table width=700 class='noborder'>"
+            table_rows += "<table width=1000 class='noborder'>"
             PC_HOST="<b>{}</b>".format(label)
-            PC = diskPCCell(pc, 0.8, thresholds, colours)
+            PC = diskPCCell(pc, 0.8, thresholds, colours, orientation='width')
 
-            table_rows += '<tr><td width=20%>' + PC_HOST + '</td><td>' + PC + '</td></tr>'
+            table_rows += '<tr><td width=20%>' + PC_HOST + '</td><td>' + PC + '</td></tr>\n'
+            table_rows += "</table>\n"
+
+            pcs=[10,20,30,50,45,60,70,75,85,95,85]
+            html = diskPCBarChart(label, pcs)
+            table_rows += html
             
     html_table=HTML_TABLE.format(table_rows)
     #print(table)
@@ -597,3 +635,19 @@ def archive_df(inventory, platform):
                 DISK_USAGE[host][partn]=pc
 
     return DISK_USAGE
+
+def show_df_trend(inventory, platform):
+    # TODO:
+    for host in sorted(inventory['df_check']):    
+        ip = inventory['hosts'][host]['ansible_host']
+
+        # read from history subdir (~/notebooks/cron for cron jobs)
+        history_file='history/df_history_' + platform + '_' + host + '.txt'
+        history_fd = open(history_file, 'r')
+
+        df_check = inventory['hosts'][host]['df_check']
+
+        df_partns=df_check.split(",")
+
+
+
