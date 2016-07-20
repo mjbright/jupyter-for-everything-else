@@ -100,9 +100,11 @@ def getServerList(conn, showFlavors=False, showImages=False):
 
     flushfile.save_stderr()
 
+    info_str=''
+
     try:
         flavors = conn.compute.flavors()
-        print("{} flavors".format(sum(1 for i in flavors)))
+        info_str += "{} flavors, ".format(sum(1 for i in flavors))
         flavors = conn.compute.flavors()
         for f in flavors:
             #print("FLAVOR: " + f['name'])
@@ -117,7 +119,7 @@ def getServerList(conn, showFlavors=False, showImages=False):
 
     try:
         images = conn.compute.images()
-        print("{} images".format(sum(1 for i in images)))
+        info_str += "{} images, ".format(sum(1 for i in images))
         images = conn.compute.images()
         for i in images:
             #print("IMAGE: " + i['name'])
@@ -134,7 +136,7 @@ def getServerList(conn, showFlavors=False, showImages=False):
         headers=['name','status','flavor','image','addresses']
         servers_list = [ [ '<center><b>'+h+'</b></center>' for h in headers ] ]
         servers = conn.compute.servers()
-        print("{} servers".format(sum(1 for i in servers)))
+        info_str += "{} servers".format(sum(1 for i in servers))
         #print(highlights)
     except Exception as e:
         print("Failed to determine number of servers: " + str(e))
@@ -152,6 +154,7 @@ def getServerList(conn, showFlavors=False, showImages=False):
         print("Failed to enumerate servers: " + str(e))
         traceback.print_exc(file=sys.stdout)
 
+    print(info_str)
     html = ListTable._repr_html_(servers_list, highlights)
 
     flushfile.restore_stderr()
@@ -193,10 +196,15 @@ def display_html_endpoint_urls(conn):
 
 def platformStatus(platform, disk_thresholds):
     HTML_OP=''
+
+    #if VERBOSE:
+    print("\n-------- Checking platform <{}>".format(platform))
     
-    show_notebook_url(platform, host_ip="10.3.216.210", port=8888)
     HTML_OP += '<b>' + html_platform_info(platform, '<a href="#RESULTS_STATUS"> Return to Top (RESULTS_STATUS) </a>')+ '</b>'
     
+    url, html = linkto_notebook_url(platform, host_ip="10.3.216.210", port=8888)
+    HTML_OP += html
+
     ini_file="$HOME/env/{}_hosts.ini".format(platform)
     if VERBOSE:
         print("Reading " + ini_file)
@@ -210,7 +218,7 @@ def platformStatus(platform, disk_thresholds):
     if VERBOSE:
         print("Pinging ...")
     HTML, PING_STATUS = html_ping_all(inventory)
-    HTML_OP += HTML
+    HTML_OP += '<h3>Ping Status</h3>' + HTML
     
     if VERBOSE:
         print("Get server/flavor/image list ...")
@@ -220,21 +228,24 @@ def platformStatus(platform, disk_thresholds):
     if VERBOSE:
         print("Pinging ports ...")
     HTML, PING_PORTS_STATUS = html_ping_ports_all(inventory)
-    HTML_OP += HTML
+    HTML_OP += '<h3>Ports Status</h3>' + HTML
     
     if VERBOSE:
         print("Pinging endpoints ...")
     HTML, ENDPOINTS_STATUS = html_endpoint_urls(conn)
-    HTML_OP += HTML
+    HTML_OP += '<h3>Endpoints Status</h3>' + HTML
     
     DISK_USAGE = archive_df(inventory, platform)
 
-    HIGHEST_DISK_PC, HIGHEST_DISK_PC_HOST, DF_TABLE_HTML = diskPCTable(DISK_USAGE, thresholds=disk_thresholds, colours=['lightgreen','orange','red'])
+    HIGHEST_DISK_PC, HIGHEST_DISK_PC_HOST, SUMMARY_HIGHEST_DISK_HTML, HIGHEST_DISK_HTML = \
+        diskPCTable(platform, DISK_USAGE, thresholds=disk_thresholds, colours=['lightgreen','orange','red'])
     #HIGHEST_DISK_PC = diskPCCell(highestpc, 0.5, thresholds, colours)
     #HIGHEST_DISK_PC_HOST = '<b>{}</b>'.format(highestpc_label)
 
-    HTML_OP += DF_TABLE_HTML
+    HTML_OP += '<h3>Disk Space</h3>' + HIGHEST_DISK_HTML
+    #print( HIGHEST_DISK_HTML )
 
-    return inventory, HTML_OP, PING_STATUS, VMS_STATUS, PING_PORTS_STATUS, ENDPOINTS_STATUS, HIGHEST_DISK_PC, HIGHEST_DISK_PC_HOST
+    return inventory, HTML_OP, PING_STATUS, VMS_STATUS, PING_PORTS_STATUS, ENDPOINTS_STATUS, \
+           HIGHEST_DISK_PC, HIGHEST_DISK_PC_HOST, SUMMARY_HIGHEST_DISK_HTML, HIGHEST_DISK_HTML
 
 

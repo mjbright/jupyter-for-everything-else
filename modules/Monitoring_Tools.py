@@ -143,7 +143,7 @@ def read_inventory(hosts_file):
                     val=arg[eqpos+1:]
                     ret[group][hostname][key]=val
                     
-        #print("hostname=<"+hostname+">")
+        #print("file=<" + hosts_file + "> hostname=<"+hostname+">")
     return ret
 
 
@@ -326,7 +326,7 @@ class DictTable(dict):
     # Overridden dict class which takes a dict in the form {'a': 2, 'b': 3},
     # and renders an HTML Table in IPython Notebook.
     def _repr_html_(self, highlights=None, widths=None):
-        html = [ '''<table width=1000 style="border: 1px solid black; border-style: collapse;" border="1" width=100%>''' ]
+        html = [ '''<table width=700 style="border: 1px solid black; border-style: collapse;" border="1" width=100%>''' ]
         #for key, value in self.items():
 
         headerSeen=False
@@ -471,7 +471,12 @@ def html_ping_endpoint_urls(endpoint_urls):
 Doesn't work in html copy of notebook, as e-mail client won't run the javascript:
 
 def show_notebook_url():
-    display(HTML('''
+    html = notebook_url()
+    display(HTML(html))
+
+def linkto_notebook_url():
+
+    return '''
 <div id="notebookurl">NOTEBOOK_URL</div>
  
 <script>
@@ -483,10 +488,14 @@ document.getElementById("notebookurl").innerHTML = ahref;
 
 """
 
-def show_notebook_url(platform, host_ip, port=8888):
+def linkto_notebook_url(platform, host_ip, port=8888):
     url = get_notebook_url(platform, host_ip, port)
     html='<h4>The latest version of this status is available at <a href="' + url + '">' + url + '</a></h4>'
-    display(HTML( html ))
+    return url, html
+
+def show_notebook_url(platform, host_ip, port=8888):
+    url, html = linkto_notebook_url()
+    display(HTML(html))
     return url
 
 def get_notebook_url(platform, host_ip, port=8888):
@@ -502,7 +511,7 @@ def get_notebook_url(platform, host_ip, port=8888):
     return url
 
 def displayDiskPCTable(DISK_USAGE, thresholds=[70,90], colours=['lightgreen','orange','red']):
-    highestpc, html = diskPCTable(DISK_USAGE, thresholds, colours)
+    highestpc, html = diskPCTable(platform, DISK_USAGE, thresholds, colours)
     display(HTML(html))
     return highestpc
 
@@ -544,7 +553,7 @@ def diskPCCell(pc, pcwidth, thresholds=[70,90], colours=['lightgreen','orange','
     #return "<table class='noborder'><tr>" + html_cell + "</tr>\n</table>\n"
     return "____NEVER____"
     
-def diskPCTable(DISK_USAGE, thresholds=[70,90], colours=['lightgreen','orange','red']):
+def diskPCTable(platform, DISK_USAGE, thresholds=[70,90], colours=['lightgreen','orange','red']):
     HTML_TABLE="<table><tbody>\n{}</tbody></table>\n"
     elements={}
     
@@ -565,27 +574,50 @@ def diskPCTable(DISK_USAGE, thresholds=[70,90], colours=['lightgreen','orange','
     
     #thresholds.append(100)
     table_rows=''
+    summary_table_rows=''
     
     for pc in reverse_sorted_keys:
         for label in elements[pc]:
             #TEST: import random
             #TEST: pc = random.randrange(0, 101, 2)
 
-            table_rows += "<table width=1000 class='noborder'>"
+            table_row = "<table width=600 class='noborder'>"
             PC_HOST="<b>{}</b>".format(label)
-            PC = diskPCCell(pc, 0.8, thresholds, colours, orientation='width')
+            PC = diskPCCell(int(pc), 0.8, thresholds, colours, orientation='width')
 
-            table_rows += '<tr><td width=20%>' + PC_HOST + '</td><td>' + PC + '</td></tr>\n'
-            table_rows += "</table>\n"
+            table_row += '<tr><td width=15%>' + PC_HOST + '</td><td>' + PC + '</td></tr>\n'
+            table_row += "</table>\n"
 
-            pcs=[10,20,30,50,45,60,70,75,85,95,85]
-            html = diskPCBarChart(label, pcs)
-            table_rows += html
+            if summary_table_rows == '':
+                summary_table_rows = table_row
+
+            table_rows += table_row
+
+            #pcs=[10,20,30,50,45,60,70,75,85,95,85]
+            colon_pos=label.find(':')
+            host=label[:colon_pos]
+            part=label[colon_pos+1:].strip() # Why?
+            df_trend = get_df_trend(platform, host, part)
+            SEEN={}
+            pcs=[]
+            for i in df_trend:
+                date, pc = i
+                if not date in SEEN:
+                    #print(i)
+                    SEEN[date]=True
+                    pcs.append(int(pc))
+            #print("{} {}:{} %ages:{}".format(platform, host, part, str(pcs[-10:])))
+
+            html = '<h4> ' + label + ': Disk usage trend</h4>' + diskPCBarChart(label, pcs)
+            table_rows += '<table><tr><td>\n  ' + html + '\n</td></tr></table>'
             
+    #html_table=HTML_TABLE.format(table_rows)
     html_table=HTML_TABLE.format(table_rows)
+    #summary_html_table=HTML_TABLE.format(summary_table_rows)
+    summary_html_table=summary_table_rows
     #print(table)
     #display(HTML(table))
-    return highestpc, highestpc_label, html_table
+    return highestpc, highestpc_label, summary_html_table, html_table
 
 def archive_df(inventory, platform):
     #TODO: ! [ ! -d history ] && mkdir history
@@ -649,5 +681,59 @@ def show_df_trend(inventory, platform):
 
         df_partns=df_check.split(",")
 
+def get_df_trend(platform, host, part):
+    # read from history subdir (~/notebooks/cron for cron jobs)
+    history_file='history/df_history_' + platform + '_' + host + '.txt'
+    history_fd = open(history_file, 'r')
 
+    ENTRY=0
+    PROCESS_ENTRY=False
+    SEEN=dict()
+    df_trend=[]
+
+    for line in history_fd.readlines():
+        line=line.rstrip()
+        #print(line)
+            
+        if line.find("DATE:") == 0:
+            date=line[5:]
+            #date=date[ : date.find('_')]
+            date=date[ : 10]
+            if date in SEEN:
+                PROCESS_ENTRY=False
+                pass
+            
+            ENTRY += 1
+            SEEN[date]=True
+            PROCESS_ENTRY=True
+            continue
+        
+        if PROCESS_ENTRY:
+            #print("LINE:" + line)
+            part_pos = line.rfind(' ' + part)
+            exp_part_pos = len(line) - len(part) - 1
+            
+            #print("part[{}]_pos={}/{} llen={}".format(part, part_pos, exp_part_pos, len(line)))
+            if part_pos != -1 and part_pos == exp_part_pos:
+                #print("part[{}]_pos={} llen={}".format(part, part_pos, len(line)))
+                pcpos=line.rfind("%")
+                #print(pcpos)
+                pcage=line[ pcpos-2:pcpos].strip()
+                #print("{} PCAGE: {}%".format(part, pcage))
+                df_trend.append( (date, pcage ))
+
+    #print("Read {} entries [{} used] from {}".format(ENTRY, len(df_trend), history_file))
+    return df_trend
+
+def showUptimes():
+    for host in sorted(inventory['ssh_check']):    
+        ip = inventory['hosts'][host]['ansible_host']
+        user = inventory['hosts'][host]['ansible_user']
+        pkey = inventory['hosts'][host]['ssh_key']
+
+        stdout, stderr = ssh_command(host, ip, user, pkey, "uptime")
+
+        #print("LINE=" + stdout)
+        uptime = strip_uptime(stdout)
+        print(host + ":" + uptime)
 
