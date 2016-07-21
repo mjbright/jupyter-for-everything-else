@@ -239,8 +239,6 @@ def platformStatus(platform, disk_thresholds):
 
     HIGHEST_DISK_PC, HIGHEST_DISK_PC_HOST, SUMMARY_HIGHEST_DISK_HTML, HIGHEST_DISK_HTML = \
         diskPCTable(platform, DISK_USAGE, thresholds=disk_thresholds, colours=['lightgreen','orange','red'])
-    #HIGHEST_DISK_PC = diskPCCell(highestpc, 0.5, thresholds, colours)
-    #HIGHEST_DISK_PC_HOST = '<b>{}</b>'.format(highestpc_label)
 
     HTML_OP += '<h3>Disk Space</h3>' + HIGHEST_DISK_HTML
     #print( HIGHEST_DISK_HTML )
