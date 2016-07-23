@@ -36,6 +36,12 @@ else:
 
 import paramiko, socket
 
+def aslicedict(aDict, str):
+    return {k:v for k,v in aDict.items() if k.startswith(str)}
+
+def slicedict(aDict, aList):
+    return {k:v for k,v in aDict.items() if k in aList}
+
 def ssh_command(host_name, host_ip, user, pkey, command):
     '''
        Simple wrapper around paramiko
@@ -494,7 +500,7 @@ def linkto_notebook_url(platform, host_ip, port=8888):
     return url, html
 
 def show_notebook_url(platform, host_ip, port=8888):
-    url, html = linkto_notebook_url()
+    url, html = linkto_notebook_url(platform, host_ip, port)
     display(HTML(html))
     return url
 
