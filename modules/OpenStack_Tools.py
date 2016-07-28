@@ -239,13 +239,22 @@ def platformStatus(platform, disk_thresholds):
 
     HIGHEST_DISK_PC, HIGHEST_DISK_PC_HOST, SUMMARY_HIGHEST_DISK_HTML, HIGHEST_DISK_HTML = \
         diskPCTable(platform, DISK_USAGE, thresholds=disk_thresholds, colours=['lightgreen','orange','red'])
-    #HIGHEST_DISK_PC = diskPCCell(highestpc, 0.5, thresholds, colours)
-    #HIGHEST_DISK_PC_HOST = '<b>{}</b>'.format(highestpc_label)
 
     HTML_OP += '<h3>Disk Space</h3>' + HIGHEST_DISK_HTML
     #print( HIGHEST_DISK_HTML )
 
-    return inventory, HTML_OP, PING_STATUS, VMS_STATUS, PING_PORTS_STATUS, ENDPOINTS_STATUS, \
-           HIGHEST_DISK_PC, HIGHEST_DISK_PC_HOST, SUMMARY_HIGHEST_DISK_HTML, HIGHEST_DISK_HTML
+    RESULTS={
+      'INVENTORY': inventory,
+      'HTML_OP': HTML_OP,
+      'PING_STATUS': PING_STATUS,
+      'VMS_STATUS': VMS_STATUS,
+      'PING_PORTS_STATUS': PING_PORTS_STATUS,
+      'ENDPOINTS_STATUS': ENDPOINTS_STATUS,
+      'HIGHEST_DISK_PC': HIGHEST_DISK_PC,
+      'HIGHEST_DISK_PC_HOST': HIGHEST_DISK_PC_HOST,
+      'SUMMARY_HIGHEST_DISK_HTML': SUMMARY_HIGHEST_DISK_HTML,
+      'HIGHEST_DISK_HTML': HIGHEST_DISK_HTML
+    }
+    return RESULTS
 
 

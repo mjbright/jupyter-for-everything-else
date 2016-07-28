@@ -36,6 +36,12 @@ else:
 
 import paramiko, socket
 
+def aslicedict(aDict, str):
+    return {k:v for k,v in aDict.items() if k.startswith(str)}
+
+def slicedict(aDict, aList):
+    return {k:v for k,v in aDict.items() if k in aList}
+
 def ssh_command(host_name, host_ip, user, pkey, command):
     '''
        Simple wrapper around paramiko
@@ -226,7 +232,7 @@ def ping_all(inventory):
             ip = host_entry['ansible_host']
         if 'ansible_ip' in host_entry:
             ip = host_entry['ansible_ip']
-        if not UNDER_CRON:
+        if not UNDER_CRON and VERBOSE:
             sys.stdout.write("ping({}[{}]) ... ".format(host, ip))
         #result = ping(ip)
         result = ping_cmd(ip)
@@ -494,7 +500,7 @@ def linkto_notebook_url(platform, host_ip, port=8888):
     return url, html
 
 def show_notebook_url(platform, host_ip, port=8888):
-    url, html = linkto_notebook_url()
+    url, html = linkto_notebook_url(platform, host_ip, port)
     display(HTML(html))
     return url
 
@@ -505,7 +511,11 @@ def get_notebook_url(platform, host_ip, port=8888):
     # connection_info_json=json.load(open(connection_info_file,'r'))
     #print(str(connection_info_json))
 
-    url="http://{}:{}/tree/notebooks/cron/OpenStack_Monitoring_{}.html".format(host_ip, port, platform)
+    #url="http://{}:{}/tree/notebooks/cron/OpenStack_Monitoring_{}.html".format(host_ip, port, platform)
+    if UNDER_CRON:
+        url="http://{}:{}/tree/notebooks/cron/OpenStack_MultipleSystems_Monitoring_ALL.html#RESULTS_STATUS".format(host_ip, port, platform)
+    else:
+        url="http://{}:{}/tree/notebooks/OpenStack_MultipleSystems_Monitoring_ALL.html#RESULTS_STATUS".format(host_ip, port, platform)
     #url="http://{}:{}/notebooks/notebooks/cron/OpenStack_Monitoring_{}.ipynb".format(host_ip, port, platform)
      #http://10.3.216.210:8888/notebooks/notebooks/cron/OpenStack_Monitoring_Py3.ipynb
     return url
@@ -544,7 +554,7 @@ def diskPCCell(pc, pcwidth, thresholds=[70,90], colours=['lightgreen','orange','
     #width = 1+int(pcwidth * pc)
     if orientation == 'width':
         html_cell = "<tr><td class='noborder' style='color: #000; background-color: {};' width={}%><b>{}%</b></td><td></td></tr>".format(colour,pc,pc)
-        return "<table class='noborder'><tr>" + html_cell + "</tr>\n</table>\n"
+        return "<table width=500 class='noborder'><tr>" + html_cell + "</tr>\n</table>\n"
     else:
         html_cell = "<td><table class='noborder'>\n  "
         html_cell += "<tr height={} style='vertical-align:bottom;'><td class='noborder' style='vertical-align:bottom; color: #000; background-color: {};'><b>{}%</b></td></tr><tr><td style='vertical-align:bottom;'></td></tr>".format(pc, colour, pc)
