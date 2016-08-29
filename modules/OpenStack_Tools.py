@@ -257,4 +257,41 @@ def platformStatus(platform, disk_thresholds):
     }
     return RESULTS
 
+def getplatformStatuses(platforms):
+    UNDER_CRON=True
+
+    HTML_OPS={}
+    STATUSES={}
+    DISK_USAGE={}
+
+    thresholds=[70,90]
+    colours=['lightgreen','orange','red']
+    for platform in platforms:    
+        STATUS = platformStatus(platform, disk_thresholds=[70,90])
+        HTML_OPS[platform] = STATUS['HTML_OP'] + STATUS['HIGHEST_DISK_HTML']
+        STATUSES[platform] = STATUS
+        
+    return HTML_OPS, STATUSES, DISK_USAGE
+
+def showPlatformStatuses(platforms, HTML_OPS, STATUSES, DISK_USAGE):
+    display( HTML( '<h1><a name="RESULTS_STATUS" /> Platforms Status Summary </h1>' ))
+
+    DISP_STATUSES={}
+    DISP_STATUSES['--Platform']=[ 'Worst case Disk usage', 'Ping', 'Ports', 'Endpoints', 'VMs' ]
+    for platform in platforms:
+        LINK='<a href="#RESULTS_' + platform + '">' + platform +'</a>'
+
+        VALUES=[]
+        for key in [ 'SUMMARY_HIGHEST_DISK_HTML', 'PING_STATUS', 'PING_PORTS_STATUS', 'ENDPOINTS_STATUS', 'VMS_STATUS']:
+            VALUES.append( STATUSES[platform][key])
+
+        DISP_STATUSES[LINK]= VALUES
+
+    display( HTML( DictTable._repr_html_(DISP_STATUSES, STATUS_HIGHLIGHTS) ))
+
+    display( HTML( '<h1>Platforms results </h1>' ))
+    for platform in platforms:
+        display( HTML( '<a name="RESULTS_{}">_</a>'.format(platform) ))
+        HTML_OP = HTML_OPS[platform]
+        display( HTML( HTML_OP )) 
 
