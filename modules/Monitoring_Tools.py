@@ -511,6 +511,9 @@ def html_ping_endpoint_urls(endpoint_urls):
 
     results=dict()
 
+    ALL_OK=True
+    ALL_FAIL=True
+
     for service in endpoint_urls:
         ip_port = endpoint_urls[service].split('/')[2]
         (ip, port) = ip_port.split(':')
@@ -523,8 +526,10 @@ def html_ping_endpoint_urls(endpoint_urls):
         result = ping_port(ip, int(port), timeout=2)
         if result == 0:
             results[service_info]="OK"
+            ALL_FAIL=False
         else:
             results[service_info]="TIMEOUT"
+            ALL_OK=False
             
         if VERBOSE:
             print(results[service_info])
@@ -533,7 +538,13 @@ def html_ping_endpoint_urls(endpoint_urls):
         'OK':      ok_highlight,
         'TIMEOUT': error_highlight,
     }
-    return DictTable._repr_html_(results, ping_highlights), "OK"
+
+    STATUS='OK'
+    if ALL_FAIL:
+        STATUS='FAIL'
+    if not ALL_OK:
+        STATUS='WARN'
+    return DictTable._repr_html_(results, ping_highlights), STATUS
 
 """
 Doesn't work in html copy of notebook, as e-mail client won't run the javascript:
