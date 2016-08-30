@@ -13,13 +13,41 @@ from IPython.core.display import display,HTML,Javascript
 #import datetime
 from time import gmtime, strftime
 
+import signal
+import traceback
+
+class TimeoutException(Exception):
+    """Exception raised for timeouts
+
+    Attributes:
+        message -- explanation of the error
+    """
+
+    def __init__(self, message):
+        self.message = message
+
+def signalHandler(signum, frame):
+    tstring = strftime("%H:%M:%S", gmtime())
+    print('{}: Monitoring_Tools: Signal handler called with signal'.format(tstring), signum)
+
+    traceback.print_stack(frame, limit=-1, file=sys.stdout)
+    traceback.print_stack(frame, limit=1, file=sys.stdout)
+    raise TimeoutException("Monitoring - timeout")
+
+
+## dtstring = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+## print("Starting at: " + dtstring)
+signal.signal(signal.SIGALRM, signalHandler)
+
 error_highlight='<div style="background-color: red; color: white"><b>{}</b></div>'
 warn_highlight='<div style="background-color: orange; color: white"><b>{}</b></div>'
+unknown_highlight='<div style="background-color: gray; color: white"><b>{}</b></div>'
 ok_highlight='<div style="background-color: lightgreen; color: white"><b>{}</b></div>'
 
 STATUS_HIGHLIGHTS={
     'OK':      ok_highlight,
     'WARN':  warn_highlight,
+    'UNKNOWN':  unknown_highlight,
     'ERROR': error_highlight,
 }
 
