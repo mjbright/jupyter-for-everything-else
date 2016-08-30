@@ -698,6 +698,10 @@ def archive_df(inventory, platform):
         history_fd.write('DATE:' + dt + '\n' + df_op)
         history_fd.close()
 
+        # If first df fails, don't bother with second:
+        if df_op == '':
+            continue
+
         df_cmd="df " + df_check.replace(",", " ") + "| grep -v ^Filesystem"
         df_op, stderr = ssh_command(host, ip, user, pkey, df_cmd)    
         #df_op = stdout.decode('utf8')
