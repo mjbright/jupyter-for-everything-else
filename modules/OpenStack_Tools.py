@@ -5,10 +5,11 @@ from openstack import utils
 from openstackclient.common import clientmanager
 import sys, os
 import os_client_config
-import traceback
 
-#from Monitoring_Tools import DictTable, ListTable, highlights, ok_highlight, warn_highlight, error_highlight
-#from Monitoring_Tools import DictTable, ListTable, highlights, html_ping_endpoint_urls
+from time import gmtime, strftime
+import traceback
+import signal
+
 from Monitoring_Tools import *
 from IPython.core.display import display,HTML
 
@@ -16,6 +17,46 @@ if os.getenv('VERBOSE', '0') == '0':
     VERBOSE = False
 else:
     VERBOSE = True
+
+def filter_stack_trace(frame, reject_filter, limit=None):
+    tb_list = traceback.extract_stack(frame, limit=None)
+
+    return_first_last_str=''
+
+    # Get 1st non-IPython line:
+
+    entry=0
+    for tb_tpl in tb_list:
+        entry=entry+1
+        filename, line_number, function_name, text  = tb_tpl
+        if not reject_filter in filename:
+            return_first_last_str += 'File {}, line {}, in {},\n\t{}\n'.format(filename, line_number, function_name, text)
+            pass;
+
+        if limit and entry >= limit:
+            break;
+
+    ## # Get last non-IPython line:
+    ## filename, line_number, function_name, text  = tb_list[-1]
+    ## return_first_last_str += 'File {}, line {}, in {}, {}\n'.format(filename, line_number, function_name, text)
+
+    return return_first_last_str
+
+def signalHandler(signum, frame):
+    tstring = strftime("%H:%M:%S", gmtime())
+    print('{}: OpenStack_Tools: Signal handler called with signal'.format(tstring), signum)
+
+    print(filter_stack_trace(frame, 'lib/python', 1))
+    #print("-- 1:")
+    traceback.print_stack(frame, limit=1, file=sys.stdout)
+    #print("-- FULL:")
+    #traceback.print_stack(frame, file=sys.stdout)
+    raise TimeoutException("OpenStack - timeout")
+
+
+dtstring = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+print("Starting at: " + dtstring)
+signal.signal(signal.SIGALRM, signalHandler)
 
 
 '''
