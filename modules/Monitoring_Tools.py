@@ -283,6 +283,9 @@ def html_ping_all(inventory):
     
     results=dict()
     
+    ALL_OK=True
+    ALL_FAIL=True
+
     ping_checks=0
     for host in sorted(inventory['ping_check']):
         if not host in inventory['hosts']:
@@ -306,8 +309,10 @@ def html_ping_all(inventory):
             result = ping_cmd(ip)
             if result:
                 results[host_info]="OK: {} msec".format(result)
+                ALL_FAIL=False
             else:
                 results[host_info]="TIMEOUT"
+                ALL_OK=False
         except KeyboardInterrupt:
             results[host_info]="TIMEOUT"
         except Exception as e:
@@ -316,13 +321,20 @@ def html_ping_all(inventory):
             signal.alarm(0)
              
     if ping_checks == 0:
-        return "<b>No ping_check entries in inventory</b>", "OK"
+        return "<b>No ping_check entries in inventory</b>", "UNKNOWN"
 
     ping_highlights={
         'OK':      ok_highlight,
         'TIMEOUT': error_highlight,
     }
-    return DictTable._repr_html_(results, ping_highlights), "OK"
+
+    STATUS='OK'
+    if ALL_FAIL:
+        STATUS='FAIL'
+    if not ALL_OK:
+        STATUS='WARN'
+
+    return DictTable._repr_html_(results, ping_highlights), STATUS
 
 
 def ping_port(host, port,timeout=None):
