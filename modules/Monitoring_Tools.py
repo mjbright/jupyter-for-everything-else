@@ -262,7 +262,14 @@ def ping_all(inventory):
         if not UNDER_CRON and VERBOSE:
             sys.stdout.write("ping({}[{}]) ... ".format(host, ip))
         #result = ping(ip)
-        result = ping_cmd(ip)
+        signal.alarm(3)
+        try:
+            result = ping_cmd(ip)
+        except:
+            result = None
+        finally:
+            signal.alarm(0)
+
         if result:
             print("{} msec".format(result))
         #print("ping({}[{}] => {})".format(host, result, ip))
@@ -293,6 +300,8 @@ def html_ping_all(inventory):
         if not UNDER_CRON:
             sys.stdout.write("ping({}) ... ".format(host_info))
         #result = ping(ip)
+
+        signal.alarm(3)
         try:
             result = ping_cmd(ip)
             if result:
@@ -303,6 +312,8 @@ def html_ping_all(inventory):
             results[host_info]="TIMEOUT"
         except Exception as e:
             results[host_info]="TIMEOUT"
+        finally:
+            signal.alarm(0)
              
     if ping_checks == 0:
         return "<b>No ping_check entries in inventory</b>", "OK"
