@@ -134,18 +134,11 @@ def displayServerList(conn, showFlavors=False, showImages=False):
     display( HTML(html) )
     return STATUS
 
-def getServerList(conn, showFlavors=False, showImages=False):
-    servers_list=[]
+def getFlavors(conn, showFlavors=False):
     flavor_names={}
-    image_names={}
 
-    flushfile.save_stderr()
-
-    info_str=''
-
+    signal.alarm(10)
     try:
-        flavors = conn.compute.flavors()
-        info_str += "{} flavors, ".format(sum(1 for i in flavors))
         flavors = conn.compute.flavors()
         for f in flavors:
             #print("FLAVOR: " + f['name'])
@@ -153,14 +146,23 @@ def getServerList(conn, showFlavors=False, showImages=False):
 
         if showFlavors:
             html = DictTable._repr_html_(flavor_names, highlights=None)
-            #print(html)
             display( HTML(html) )
-    except Exception as e:
-        print("Failed to determine number of flavors")
 
+    except TimeoutException as e:
+        print("Failed to determine number of flavors" + str(e))
+        return "0 flavors, ", flavor_names, 'ERROR'
+
+    finally:
+        signal.alarm(0)
+
+    info_str = "{} flavors, ".format( len(flavor_names) )
+    return info_str, flavor_names, 'OK'
+
+def getImages(conn, showImages=False):
+    image_names={}
+
+    signal.alarm(10)
     try:
-        images = conn.compute.images()
-        info_str += "{} images, ".format(sum(1 for i in images))
         images = conn.compute.images()
         for i in images:
             #print("IMAGE: " + i['name'])
@@ -170,37 +172,79 @@ def getServerList(conn, showFlavors=False, showImages=False):
             html = DictTable._repr_html_(image_names, highlights=None)
             #print(html)
             display( HTML(html) )
-    except Exception as e:
-        print("Failed to determine number of images")
 
-    try:
-        headers=['name','status','flavor','image','addresses']
-        servers_list = [ [ '<center><b>'+h+'</b></center>' for h in headers ] ]
-        servers = conn.compute.servers()
-        info_str += "{} servers".format(sum(1 for i in servers))
-        #print(highlights)
-    except Exception as e:
-        print("Failed to determine number of servers: " + str(e))
+    except TimeoutException as e:
+        print("Failed to determine number of images" + str(e))
+        return "0 images, ", image_names, 'ERROR'
 
+    finally:
+        signal.alarm(0)
+
+    info_str = "{} images, ".format( len(image_names) )
+    return info_str, image_names, 'OK'
+
+def getServers(conn):
+    servers_list=[]
+    servers_html=[]
+
+    headers=['name','status','flavor','image','addresses']
+    servers_html = [ [ '<center><b>'+h+'</b></center>' for h in headers ] ]
+
+    signal.alarm(10)
     try:
         servers = conn.compute.servers()
         for s in servers:
+            servers_list += s
             #print("SERVER=" + str(s))
-
             s_list = getServerFields(s, headers, flavor_names, image_names)
             #print("SERVER fields=" + str(s_list))
 
-            servers_list += [ s_list ]
-    except Exception as e:
-        print("Failed to enumerate servers: " + str(e))
-        traceback.print_exc(file=sys.stdout)
+            servers_html += [ s_list ]
 
-    print(info_str)
-    html = ListTable._repr_html_(servers_list, highlights)
+    except TimeoutException as e:
+        print("Failed to determine number of servers: " + str(e))
+        return "0 servers, ", servers_list, 'ERROR'
 
-    flushfile.restore_stderr()
+    finally:
+        signal.alarm(0)
 
-    return html, "OK"
+    info_str = "{} servers, ".format( len(servers_list) )
+    return info_str, servers_list, 'OK'
+
+def getServerList(conn, showFlavors=False, showImages=False):
+
+    flushfile.save_stderr()
+
+    info_str=''
+
+    STATUS='OK'
+    html=''
+
+    i_s, servers_list, STATUS = getServers(conn)
+    info_str += i_s
+
+    if STATUS == 'OK':
+        i_s, flavor_names, STATUS = getFlavors(conn, showFlavors)
+        info_str += i_s
+
+        i_s, image_names, STATUS = getImages(conn, showImages)
+        info_str += i_s
+
+    signal.alarm(10)
+    try:
+        print(info_str)
+        html = ListTable._repr_html_(servers_list, highlights)
+
+        flushfile.restore_stderr()
+
+    except TimeoutException as e:
+        print("Failed to handle o/p: " + str(e))
+        return html, 'ERROR'
+
+    finally:
+        signal.alarm(0)
+
+    return html, STATUS
 
 def html_endpoint_urls(conn):
     from openstack import profile as _profile
