@@ -287,7 +287,8 @@ def platformStatus(platform, disk_thresholds):
     HTML_OP=''
 
     #if VERBOSE:
-    print("\n-------- Checking platform <{}>".format(platform))
+    tstring = strftime("%H:%M:%S", gmtime())
+    print("\n-------- {} Checking platform <{}>".format(tstring, platform))
     
     HTML_OP += '<b>' + html_platform_info(platform, '<a href="#RESULTS_STATUS"> Return to Top (RESULTS_STATUS) </a>')+ '</b>'
     
