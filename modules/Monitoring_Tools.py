@@ -692,7 +692,8 @@ def diskPCTable(platform, DISK_USAGE, thresholds=[70,90], colours=['lightgreen',
                     pcs.append(int(pc))
             #print("{} {}:{} %ages:{}".format(platform, host, part, str(pcs[-10:])))
 
-            html = '<h4> ' + label + ': Disk usage trend</h4>' + diskPCBarChart(label, pcs)
+            #html = '<h4> ' + label + ': Disk usage trend</h4>' + diskPCBarChart(label, pcs)
+            html = diskPCBarChart(label, pcs)
             table_rows += '<table><tr><td>\n  ' + html + '\n</td></tr></table>'
             
     #html_table=HTML_TABLE.format(table_rows)
