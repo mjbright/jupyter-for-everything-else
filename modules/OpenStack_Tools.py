@@ -263,14 +263,18 @@ def html_endpoint_urls(conn):
     for service in services:
         if service in service_list:
             #print("SERVICE:" + service)
+            signal.alarm(10)
             try:
                 url=conn.authenticator.get_endpoint(conn.session, service_type=service, interface='public')
                 endpoint_urls[service]=url
             #except _exceptions.EndpointNotFound:
             #    pass
+            #except TimeoutException as e:
             except Exception as e:
                 #raise
-                print("Failed to determine {} service endpoint url".format(service))
+                print("Failed to determine '{}' service endpoint url".format(service))
+            finally:
+                signal.alarm(0)
 
     return html_ping_endpoint_urls(endpoint_urls)
 
