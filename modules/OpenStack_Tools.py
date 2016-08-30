@@ -314,16 +314,20 @@ def platformStatus(platform, disk_thresholds):
         print("Get server/flavor/image list ...")
     HTML, VMS_STATUS = getServerList( conn )
     HTML_OP += HTML
+
+    if VMS_STATUS == 'ERROR':
+        PING_PORTS_STATUS = 'UNKNOWN'
+        ENDPOINTS_STATUS = 'UNKNOWN'
+    else:
+        if VERBOSE:
+            print("Pinging ports ...")
+        HTML, PING_PORTS_STATUS = html_ping_ports_all(inventory)
+        HTML_OP += '<h3>Ports Status</h3>' + HTML
     
-    if VERBOSE:
-        print("Pinging ports ...")
-    HTML, PING_PORTS_STATUS = html_ping_ports_all(inventory)
-    HTML_OP += '<h3>Ports Status</h3>' + HTML
-    
-    if VERBOSE:
-        print("Pinging endpoints ...")
-    HTML, ENDPOINTS_STATUS = html_endpoint_urls(conn)
-    HTML_OP += '<h3>Endpoints Status</h3>' + HTML
+        if VERBOSE:
+            print("Pinging endpoints ...")
+        HTML, ENDPOINTS_STATUS = html_endpoint_urls(conn)
+        HTML_OP += '<h3>Endpoints Status</h3>' + HTML
     
     DISK_USAGE = archive_df(inventory, platform)
 
