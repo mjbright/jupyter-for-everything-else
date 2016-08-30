@@ -27,10 +27,10 @@ def filter_stack_trace(frame, reject_filter, limit=None):
 
     entry=0
     for tb_tpl in tb_list:
-        entry=entry+1
         filename, line_number, function_name, text  = tb_tpl
         if not reject_filter in filename:
-            return_first_last_str += 'File {}, line {}, in {},\n\t{}\n'.format(filename, line_number, function_name, text)
+            entry=entry+1
+            return_first_last_str += '  File {}, line {}, in {},\n\t{}'.format(filename, line_number, function_name, text)
             pass;
 
         if limit and entry >= limit:
