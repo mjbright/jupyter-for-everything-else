@@ -91,7 +91,7 @@ def ssh_command(host_name, host_ip, user, pkey, command):
     except paramiko.AuthenticationException as e:
         print("AuthenticationException: Failed to connect to {} [{}@{}]".format(host_name, user, host_ip))
     except socket.error  as e:
-        print("socket.error: Failed to connect to {} [{}@{}]".format(host_name, user, host_ip))
+        print("ssh socket.error: Failed to connect to {} [{}@{}]".format(host_name, user, host_ip))
     except Exception as e:
         print("Failed to connect to {} [{}@{}]".format(host_name, user, host_ip))
     return "",""
@@ -118,13 +118,12 @@ def strip_uptime(line):
     return ""
 
 def display_platform(platform_name):
-    #dtstring = str(datetime.datetime.now())
-    #dtstring = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     display( HTML( html_platform_info(platform_name) ))
 
 def html_platform_info(platform_name, extra_html=''):
     dtstring = strftime("%Y-%m-%d %H:%M:%S")
-    return '<h3>Platform: ' + platform_name + '</h3>' + '<h4>Run at: ' + dtstring + '</h4>'+extra_html
+    #return '<h3>Platform: ' + platform_name + '</h3>' + '<h4>Run at: ' + dtstring + '</h4>'+extra_html
+    return '<h3>Platform: ' + platform_name + ' [at ' + dtstring + '] </h3>'
 
 def read_inventory(hosts_file):
     hosts_file = hosts_file.replace('~', os.getenv('HOME')).replace('$HOME', os.getenv('HOME'))
@@ -524,7 +523,8 @@ document.getElementById("notebookurl").innerHTML = ahref;
 
 def linkto_notebook_url(platform, host_ip, port=8888):
     url = get_notebook_url(platform, host_ip, port)
-    html='<h4>The latest version of this status is available at <a href="' + url + '">' + url + '</a></h4>'
+    #html='<h4>The latest version of this status is available at <a href="' + url + '">' + url + '</a></h4>'
+    html='The latest version of this status is available at <a href="' + url + '">' + url + '</a>'
     return url, html
 
 def show_notebook_url(platform, host_ip, port=8888):
