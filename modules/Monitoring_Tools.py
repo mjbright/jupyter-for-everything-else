@@ -458,6 +458,9 @@ def html_ping_ports_all(inventory, group='ssh_check', ports=[22]):
 
     results=dict()
 
+    ALL_OK=True
+    ALL_FAIL=True
+
     for host in sorted(inventory['ssh_check']):
         if not host in inventory['hosts']:
             print("Error: host <{}> not in hosts".format(host))
@@ -477,13 +480,22 @@ def html_ping_ports_all(inventory, group='ssh_check', ports=[22]):
             result = ping_port(ip, port, timeout=2)
             if result == 0:
                 results[host_port_info]="OK"
+                ALL_FAIL=False
             else:
                 results[host_port_info]="TIMEOUT"
+                ALL_OK=False
 
     ping_highlights={
         'OK':      ok_highlight,
         'TIMEOUT': error_highlight,
     }
+
+    STATUS='OK'
+    if ALL_FAIL:
+        STATUS='FAIL'
+    if not ALL_OK:
+        STATUS='WARN'
+
     return DictTable._repr_html_(results, ping_highlights), "OK"
 
 
