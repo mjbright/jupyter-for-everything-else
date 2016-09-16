@@ -30,7 +30,8 @@ def filter_stack_trace(frame, reject_filter, limit=None):
         filename, line_number, function_name, text  = tb_tpl
         if not reject_filter in filename:
             entry=entry+1
-            return_first_last_str += '  File {}, line {}, in {},\n\t{}'.format(filename, line_number, function_name, text)
+            #return_first_last_str += '  File {}, line {}, in {},\n\t{}'.format(filename, line_number, function_name, text)
+            return_first_last_str += '  File {}, line {}, in {}, {}'.format(filename, line_number, function_name, text)
             pass;
 
         if limit and entry >= limit:
@@ -183,7 +184,7 @@ def getImages(conn, showImages=False):
     info_str = "{} images, ".format( len(image_names) )
     return info_str, image_names, 'OK'
 
-def getServers(conn):
+def getServers(conn, flavor_names, image_names):
     servers_list=[]
     servers_html=[]
 
@@ -220,14 +221,15 @@ def getServerList(conn, showFlavors=False, showImages=False):
     STATUS='OK'
     html=''
 
-    i_s, servers_list, STATUS = getServers(conn)
-    info_str += i_s
-
     if STATUS == 'OK':
         i_s, flavor_names, STATUS = getFlavors(conn, showFlavors)
         info_str += i_s
 
         i_s, image_names, STATUS = getImages(conn, showImages)
+        info_str += i_s
+
+    if STATUS == 'OK':
+        i_s, servers_list, STATUS = getServers(conn, flavor_names, image_names)
         info_str += i_s
 
     signal.alarm(10)
